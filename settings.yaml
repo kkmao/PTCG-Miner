@@ -1,0 +1,25 @@
+debug: false
+max_workers: 8
+tesseract_path: "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+reroll:
+  pack: "PIKACHU"
+  delay_ms: 300
+  game_speed: 3
+  swipe_speed: 480
+  confidence: 0.8
+  timeout: 45
+  language: "Chinese"
+  account_name: "SlvGP"
+adb_ports:
+  - "16416"
+  - "16448"
+  - "16480"
+  - "16512"
+  - "16544"
+  - "16576"
+
+pack_checker:
+  use_checker: true
+  url: "http://localhost:5000"
+  username: "username"
+  password: "password"
