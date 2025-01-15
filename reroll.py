@@ -415,6 +415,10 @@ class Reroll:
             image_path=self.get_image_path("immerse"),
             screenshot=screenshot,
             region=(26, 445, 389, 710),
+        ) or self.image_search(
+            image_path=self.get_image_path("Crown"),
+            screenshot=screenshot,
+            region=(35, 465, 425, 704),
         ):
             is_god_pack = False
         return is_god_pack
