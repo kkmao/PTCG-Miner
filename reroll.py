@@ -1029,6 +1029,13 @@ class Reroll:
                 )
                 if time.time() - start_time > 60:
                     LOGGER.info(self.format_log("Timeout for checking friend request"))
+                    # back to home
+                    self.tap_until(
+                        region=(120, 681, 169, 710),
+                        image_name="WonderIcon",
+                        click_x=70,
+                        click_y=924,
+                    )
                     return
             self.tap_until(
                 region=(44, 798, 88, 838),
