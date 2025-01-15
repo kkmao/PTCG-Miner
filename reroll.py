@@ -682,11 +682,20 @@ class Reroll:
             skip_time_ms=1,
         ):
             # select country/region
-            if self.screen_search(
+            open_screenshot = self.adb_screenshot()
+            if self.image_search(
                 image_path=self.get_image_path(image_name="RegionUnselected"),
+                screenshot=open_screenshot,
                 region=(95, 361, 203, 392),
             ):
                 self.adb_tap(278, 378)
+                self.adb_tap(274, 680)
+                self.adb_tap(274, 817)
+            elif self.image_search(
+                image_path=self.get_image_path(image_name="ChooseRegion"),
+                screenshot=open_screenshot,
+                region=(182, 226, 232, 251),
+            ):
                 self.adb_tap(274, 680)
                 self.adb_tap(274, 817)
 
@@ -1129,6 +1138,15 @@ class Reroll:
                             os.curdir,
                             "screenshot",
                             f"gp_result_{check_id}_{int(time.time())}.png",
+                        ),
+                        wp_comfirm_screenshot,
+                    )
+                else:
+                    cv2.imwrite(
+                        os.path.join(
+                            os.curdir,
+                            "screenshot",
+                            f"invalid_result_{check_id}_{int(time.time())}.png",
                         ),
                         wp_comfirm_screenshot,
                     )
