@@ -10,6 +10,10 @@ DEAFULT_SCREENSHOT_DIR = "screenshot"
 DEFAUlT_BACKUP_DIR = "backup"
 DEFAUlT_LOG_DIR = "log"
 
+os.makedirs(DEAFULT_SCREENSHOT_DIR, exist_ok=True)
+os.makedirs(DEFAUlT_BACKUP_DIR, exist_ok=True)
+os.makedirs(DEFAUlT_LOG_DIR, exist_ok=True)
+
 # Load configuration from settings.yaml
 with open("settings.yaml", "r") as config_file:
     config = yaml.safe_load(config_file)
@@ -35,7 +39,7 @@ if tesseract_path:
 logging.basicConfig(
     level=logging.WARNING if not debug_mode else logging.INFO,
     format="%(asctime)s - [%(levelname)s] [%(threadName)s] %(message)s",
-    filename="log/reroll.log",
+    filename=f"{DEFAUlT_LOG_DIR}/reroll.log",
     filemode="a",
 )
 
@@ -58,10 +62,6 @@ def start_reroll(adb_port):
 
 
 if __name__ == "__main__":
-    os.makedirs(DEAFULT_SCREENSHOT_DIR, exist_ok=True)
-    os.makedirs(DEFAUlT_BACKUP_DIR, exist_ok=True)
-    os.makedirs(DEFAUlT_LOG_DIR, exist_ok=True)
-
     max_workers = config.get("max_workers", None)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         executor.map(start_reroll, adb_ports)
