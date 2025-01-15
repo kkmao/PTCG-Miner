@@ -44,3 +44,39 @@ class PackChecker:
         except requests.exceptions.RequestException as e:
             LOGGER.error(f"HTTP Request failed: {e}")
             return False
+
+    def set_valid(self, check_id, valid):
+        """
+        设置验证结果
+        """
+        try:
+            response = requests.post(
+                self.url + "/set_valid",
+                json={"id": check_id, "valid": valid},
+                auth=HTTPBasicAuth(self.username, self.password),
+            )
+            response.raise_for_status()  # 检查请求是否成功
+            data = response.json()
+            LOGGER.info(f"Pack valid response: {data}")
+            return True
+        except requests.exceptions.RequestException as e:
+            LOGGER.error(f"HTTP Request failed: {e}")
+            return False
+
+    def get_valid(self, check_id):
+        """
+        获取验证结果
+        """
+        try:
+            response = requests.get(
+                self.url + "/get_valid",
+                params={"id": check_id},
+                auth=HTTPBasicAuth(self.username, self.password),
+            )
+            response.raise_for_status()  # 检查请求是否成功
+            data = response.json()
+            LOGGER.info(f"Pack get valid response: {data}")
+            return data.get("valid")
+        except requests.exceptions.RequestException as e:
+            LOGGER.error(f"HTTP Request failed: {e}")
+            return None

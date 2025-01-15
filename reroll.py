@@ -27,6 +27,8 @@ MAX_SWIPE_SPEED = 1000
 DEFAULT_CONFIDENCE = 0.8
 DEFAULT_LANGUAGE = "Chinese"
 DEFAULT_TIME_OUT = 45
+MAX_FRIEND_TIME_SECOND = 10 * 60
+MAX_WAIT_FRIEND_TIME_SECOND = 60
 
 
 class RerollState(Enum):
@@ -189,7 +191,7 @@ class Reroll:
         if self.state != RerollState.FOUNDGP:
             self.state = RerollState.RESTART
 
-    def backup_account(self):
+    def backup_account(self, valid=False, friend_code=None):
         """
         备份账户数据
         """
@@ -219,7 +221,12 @@ class Reroll:
                 return
 
             # 备份文件名
-            backup_filename = f"deviceAccount_{self.adb_port}_{int(time.time())}.xml"
+            if friend_code:
+                backup_filename = f"{friend_code}_{'valid' if valid else 'invalid'}.xml"
+            else:
+                backup_filename = (
+                    f"deviceAccount_{self.adb_port}_{int(time.time())}.xml"
+                )
 
             # 复制账户数据文件到 SD 卡
             subprocess.run(
@@ -1027,7 +1034,7 @@ class Reroll:
                     click_x=271,
                     click_y=882,
                 )
-                if time.time() - start_time > 60:
+                if time.time() - start_time > MAX_WAIT_FRIEND_TIME_SECOND:
                     LOGGER.info(self.format_log("Timeout for checking friend request"))
                     # back to home
                     self.tap_until(
@@ -1114,12 +1121,14 @@ class Reroll:
                     image_path=self.get_image_path("Cost4"),
                     region=(128, 802, 184, 834),
                 ):
+                    # report god pack valid
+                    self.checker.set_valid(check_id=check_id, valid=True)
                     # save screenshot
                     cv2.imwrite(
                         os.path.join(
                             os.curdir,
                             "screenshot",
-                            f"god_pack_result_{self.adb_port}_{int(time.time())}.png",
+                            f"gp_result_{check_id}_{int(time.time())}.png",
                         ),
                         wp_comfirm_screenshot,
                     )
@@ -1175,18 +1184,23 @@ class Reroll:
         """
         等待检查GP是否有效
         """
+        valid = False
+        friend_code = None
         try:
             friend_code = self.get_friend_code()
             self.checker.save_check_id(check_id=friend_code, pack_num=self.current_pack)
-            self.auto_friend()
+            valid = self.auto_friend()
         except Exception as e:
             LOGGER.error(self.format_log(f"Error during check god pack: {e}"))
         finally:
-            self.backup_account()
+            self.backup_account(valid=valid, friend_code=friend_code)
 
-    def auto_friend(self):
+    def auto_friend(self, friend_code):
+        """
+        自动接受好友
+        """
         start_time = time.time()
-        while (time.time() - start_time) < 600:
+        while (time.time() - start_time) < MAX_FRIEND_TIME_SECOND:
             self.tap_until(
                 region=(44, 798, 88, 838),
                 image_name="Commu",
@@ -1205,6 +1219,9 @@ class Reroll:
                 region=(440, 291, 495, 346),
             ):
                 self.adb_tap(467, 318)
+            if self.checker.get_valid(check_id=friend_code):
+                return True
+        return False
 
     def get_friend_code(self):
         """
