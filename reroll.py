@@ -1063,6 +1063,13 @@ class Reroll:
                         click_x=104,
                         click_y=842,
                     )
+                else:
+                    self.tap_until(
+                        region=(228, 676, 270, 697),
+                        image_name="WPComfirm",
+                        click_x=104,
+                        click_y=842,
+                    )
             elif self.image_search(
                 screenshot=wp_screenshot,
                 image_path=self.get_image_path("Free"),
