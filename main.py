@@ -57,6 +57,7 @@ def start_reroll(adb_port):
         timeout=reroll_config.get("timeout"),
         language=reroll_config.get("language"),
         account_name=reroll_config.get("account_name"),
+        max_packs_to_open=reroll_config.get("max_packs_to_open"),
     )
     reroll_instance.start()
 

@@ -30,6 +30,7 @@ DEFAULT_LANGUAGE = "Chinese"
 DEFAULT_TIME_OUT = 45
 MAX_FRIEND_TIME_SECOND = 10 * 60
 MAX_WAIT_FRIEND_TIME_SECOND = 60
+DEFAULT_MAX_PACKS_TO_OPEN = 4
 
 
 class RerollState(Enum):
@@ -66,6 +67,7 @@ class Reroll:
     swipe_speed = DEFAULT_SWIPE_SPEED
     confidence = DEFAULT_CONFIDENCE
     timeout = DEFAULT_TIME_OUT
+    max_packs_to_open = DEFAULT_MAX_PACKS_TO_OPEN
 
     def __init__(
         self,
@@ -80,8 +82,9 @@ class Reroll:
         timeout=DEFAULT_TIME_OUT,
         language=DEFAULT_LANGUAGE,
         account_name="SlvGP",
+        max_packs_to_open=DEFAULT_MAX_PACKS_TO_OPEN,
     ):
-        if type(reroll_pack) is RerollPack:
+        if isinstance(reroll_pack, RerollPack):
             self.reroll_pack = reroll_pack
         else:
             self.reroll_pack = RerollPack[reroll_pack]
@@ -94,6 +97,8 @@ class Reroll:
         self.timeout = timeout
         self.language = language
         self.account_name = account_name
+        if isinstance(max_packs_to_open, int):
+            self.max_packs_to_open = max(1, min(max_packs_to_open, 4))
         # 初始化
         self.state = RerollState.INIT
         self.total_pack = 0
@@ -941,9 +946,9 @@ class Reroll:
                 LOGGER.error(
                     self.format_log(f"Invalid pack series: {self.reroll_pack.series}")
                 )
-        if self.state != RerollState.FOUNDGP:
+        if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 1:
             self.open_pack(pack_num=2)
-        if self.state != RerollState.FOUNDGP:
+        if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 2:
             self.open_pack(pack_num=3)
             self.tap_until(
                 region=(186, 634, 213, 661),
@@ -964,7 +969,7 @@ class Reroll:
                 click_y=758,
             )
         # 4th pack
-        if self.state != RerollState.FOUNDGP:
+        if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 3:
             self.open_pack(pack_num=4)
         else:
             self.tap_until(
@@ -1333,7 +1338,10 @@ class Reroll:
                 elif self.state == RerollState.FINISHED_TUTORIAL:
                     if self.checker is not None and not self.wp_checked:
                         self.check_god_pack()
-                    self.open_234_pack()
+                    if self.max_packs_to_open > 1:
+                        self.open_234_pack()
+                    else:
+                        self.state = RerollState.COMPLETED
                 elif self.state == RerollState.COMPLETED:
                     self.delete_account()
                 elif self.state == RerollState.FOUNDGP:

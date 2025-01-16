@@ -10,6 +10,7 @@ reroll:
   timeout: 45
   language: "Chinese"
   account_name: "SlvGP"
+  max_packs_to_open: 4
 adb_ports:
   - "16416"
   - "16448"
