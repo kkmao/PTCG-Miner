@@ -1167,6 +1167,7 @@ class Reroll:
                         wp_comfirm_screenshot,
                     )
                 else:
+                    self.checker.set_valid(check_id=check_id, valid=False)
                     cv2.imwrite(
                         os.path.join(
                             os.curdir,
