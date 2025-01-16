@@ -21,11 +21,12 @@ reroll:
   pack: "MEWTWO" # 刷包选项: MEWTWO, CHARIZARD, PIKACHU, MEW
   delay_ms: 300 # 操作间隔
   game_speed: 3 # 游戏速度
-  swipe_speed: 480 # 划卡包速度 (480, 1000)
+  swipe_speed: 480 # 划卡包速度 [480, 1000]
   confidence: 0.8 # 图像识别精度，没有异常不要修改
   timeout: 45 # 超时时间，操作超时会重启游戏
   language: "Chinese" # 游戏语言，目前仅支持中文
   account_name: "SlvGP" # 创建账号的名称
+  max_packs_to_open: 4 # 开卡包数量, [1, 4]
 # 模拟器的ADB端口号
 adb_ports:
   - "16416"
