@@ -6,6 +6,7 @@ import pyautogui
 import pytesseract
 import numpy as np
 import cv2
+from datetime import datetime, timezone
 from enum import Enum, auto
 from packchecker import PackChecker
 
@@ -324,6 +325,18 @@ class Reroll:
             raise RerollStuckException(
                 f"Instance {self.adb_port} has been stuck at home page"
             )
+        # 判断当前时间是否为 utc 6:00
+        now = datetime.now(timezone.utc)
+        if now.hour == 6 and now.minute < 5:
+            if self.image_search(
+                image_path=self.get_image_path("DateChange"),
+                screenshot=screenshot,
+                region=(235, 405, 288, 423),
+            ):
+                LOGGER.warning(
+                    self.format_log("Found date change. Restarting game instance...")
+                )
+                self.restart_game_instance()
 
     def tap_until(
         self,
