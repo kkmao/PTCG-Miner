@@ -1004,6 +1004,13 @@ class Reroll:
                     click_x=271,
                     click_y=919,
                 )
+                # back to home
+                self.tap_until(
+                    region=(120, 681, 169, 710),
+                    image_name="WonderIcon",
+                    click_x=70,
+                    click_y=924,
+                )
                 return
             while self.screen_search(
                 image_path=self.get_image_path("Apply"),
