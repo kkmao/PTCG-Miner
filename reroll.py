@@ -417,6 +417,7 @@ class Reroll:
         """
         检查是否有稀有卡牌
         """
+        check_need = False
         rare_card_num = 0
         screenshot = self.adb_screenshot()
         for region in BORDER_REGIONS:
@@ -429,6 +430,7 @@ class Reroll:
         is_god_pack = rare_card_num > 2
         LOGGER.info(self.format_log(f"Found {rare_card_num} rare cards"))
         if is_god_pack:
+            check_need = True
             # save screenshot
             god_pack_screenshot_path = os.path.join(
                 os.curdir,
@@ -437,16 +439,16 @@ class Reroll:
             )
             cv2.imwrite(god_pack_screenshot_path, screenshot)
         if self.image_search(
-            image_path=self.get_image_path("immerse"),
+            image_path=self.get_image_path("Immerse"),
             screenshot=screenshot,
-            region=(26, 445, 389, 710),
+            region=(26, 445, 494, 704),
         ) or self.image_search(
             image_path=self.get_image_path("Crown"),
             screenshot=screenshot,
             region=(35, 465, 425, 704),
         ):
-            is_god_pack = False
-        return is_god_pack
+            check_need = False
+        return is_god_pack, check_need
 
     def open_pack(self, pack_num=2):
         """
@@ -556,8 +558,12 @@ class Reroll:
                 delay_ms=110,
             )
             time.sleep(self.delay_ms / 1000)
-            if self.rarity_check():
-                self.state = RerollState.FOUNDGP
+            is_god_pack, check_need = self.rarity_check()
+            if is_god_pack:
+                if check_need:
+                    self.state = RerollState.FOUNDGP
+                else:
+                    self.backup_account()
             self.adb_tap(268, 903)
             if pack_num == 1:
                 self.tap_until(
