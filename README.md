@@ -4,7 +4,7 @@
 # 环境部署
 
 - Python >= 3.12
-- Tesseract OCR
+- [Tesseract](https://github.com/tesseract-ocr/tesseract) OCR
 
 # 安装依赖
 
