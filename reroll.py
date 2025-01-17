@@ -1239,7 +1239,7 @@ class Reroll:
         try:
             friend_code = self.get_friend_code()
             self.checker.save_check_id(check_id=friend_code, pack_num=self.current_pack)
-            valid = self.auto_friend()
+            valid = self.auto_friend(friend_code=friend_code)
         except Exception as e:
             LOGGER.error(self.format_log(f"Error during check god pack: {e}"))
         finally:
