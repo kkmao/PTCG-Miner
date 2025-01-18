@@ -39,7 +39,7 @@ pack_checker:
   username: "your_username"
   password: "your_password"
 # tesseract路径，使用自动验包功能时需要配置
-tesseract_path: "C:/Program Files/Tesseract-OCR/tesseract.exe"
+tesseract_path: "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 ```
 
 # 运行
