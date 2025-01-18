@@ -28,7 +28,7 @@ MAX_SWIPE_SPEED = 1000
 DEFAULT_CONFIDENCE = 0.8
 DEFAULT_LANGUAGE = "Chinese"
 DEFAULT_TIME_OUT = 45
-MAX_FRIEND_TIME_SECOND = 10 * 60
+MAX_FRIEND_TIME_SECOND = 15 * 60
 MAX_WAIT_FRIEND_TIME_SECOND = 60
 DEFAULT_MAX_PACKS_TO_OPEN = 4
 
@@ -445,7 +445,7 @@ class Reroll:
         ) or self.image_search(
             image_path=self.get_image_path("Crown"),
             screenshot=screenshot,
-            region=(35, 465, 425, 704),
+            region=(30, 465, 425, 704),
         ):
             check_need = False
         return is_god_pack, check_need
@@ -1271,6 +1271,7 @@ class Reroll:
                 self.adb_tap(467, 318)
             if self.checker.get_valid(check_id=friend_code):
                 return True
+        self.checker.set_valid(check_id=friend_code, valid=-1)
         return False
 
     def get_friend_code(self):
