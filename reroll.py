@@ -18,8 +18,8 @@ BORDER_REGIONS = [
     (36, 468, 171, 478),
     (198, 468, 333, 478),
     (362, 468, 497, 478),
-    (109, 694, 244, 704),
-    (276, 694, 411, 704),
+    # (109, 694, 244, 704),
+    # (276, 694, 411, 704),
 ]
 DEFAULT_DELAY_MS = 300
 DEFAULT_GAME_SPEED = 3
@@ -118,13 +118,14 @@ class Reroll:
         self.wp_checked = False
         self.state = RerollState.RESET
 
-    def adb_tap(self, x, y):
+    def adb_tap(self, x, y, delay=True):
         """
         使用 ADB 点击模拟器屏幕上的特定位置
         """
         cmd = self.adb_cmd + ["shell", "input", "tap", str(x), str(y)]
         subprocess.run(cmd)
-        time.sleep(self.delay_ms / 1000)
+        if delay:
+            time.sleep(self.delay_ms / 1000)
 
     def adb_swipe(self, x1, y1, x2, y2, duration=None):
         """
@@ -367,11 +368,12 @@ class Reroll:
             if click:
                 elapsed_click_time = time.time() - click_time
                 if elapsed_click_time > delay_ms / 1000:
-                    self.adb_tap(click_x, click_y)
-                    if delay_ms < self.delay_ms:
-                        self.adb_tap(click_x, click_y)
+                    self.adb_tap(click_x, click_y, delay=False)
                     if delay_ms < 200:
-                        self.adb_tap(click_x, click_y)
+                        time.sleep(delay_ms / 1000)
+                        self.adb_tap(click_x, click_y, delay=False)
+                    else:
+                        time.sleep((delay_ms - 200) / 1000)
                     click_time = time.time()
 
             if self.screen_search(image_path, region, confidence=confidence):
@@ -418,17 +420,17 @@ class Reroll:
         检查是否有稀有卡牌
         """
         check_need = False
-        rare_card_num = 0
+        common_card_num = 0
         screenshot = self.adb_screenshot()
         for region in BORDER_REGIONS:
-            if not self.image_search(
+            if self.image_search(
                 image_path=self.get_image_path("Common"),
                 screenshot=screenshot,
                 region=region,
             ):
-                rare_card_num += 1
-        is_god_pack = rare_card_num > 2
-        LOGGER.info(self.format_log(f"Found {rare_card_num} rare cards"))
+                common_card_num += 1
+        is_god_pack = common_card_num == 0
+        LOGGER.info(self.format_log(f"Found {common_card_num} common cards"))
         if is_god_pack:
             check_need = True
             # save screenshot
@@ -760,7 +762,6 @@ class Reroll:
             image_name="TosScreen",
             click_x=275,
             click_y=856,
-            delay_ms=1000,
         )
         self.tap_until(
             region=(238, 832, 302, 896),
@@ -774,7 +775,6 @@ class Reroll:
             image_name="TosScreen",
             click_x=275,
             click_y=856,
-            delay_ms=1000,
         )
 
         self.adb_tap(80, 642)
@@ -787,7 +787,6 @@ class Reroll:
             image_name="Download",
             click_x=264,
             click_y=826,
-            delay_ms=1000,
         )
         self.tap_until(
             region=(252, 419, 324, 439),
@@ -807,7 +806,6 @@ class Reroll:
             image_name="Welcome",
             click_x=490,
             click_y=910,
-            delay_ms=210,
         )
 
         if self.game_speed == 3:
@@ -829,9 +827,8 @@ class Reroll:
         while not self.tap_until(
             region=(280, 479, 352, 499),
             image_name="Name",
-            click_x=371,
+            click_x=405,
             click_y=632,
-            delay_ms=1500,
             skip_time_ms=5,
         ):
             elapsed_time = time.time() - start_time
@@ -883,6 +880,7 @@ class Reroll:
             image_name="Notification",
             click_x=268,
             click_y=366,
+            timeout_ms=45,
         )
         self.adb_tap(336, 763)
 
@@ -920,38 +918,29 @@ class Reroll:
             self.state = RerollState.FINISHED_TUTORIAL
 
     def open_234_pack(self):
-        while not self.screen_search(
-            region=(250, 820, 288, 852),
-            image_path=self.get_image_path("SmallBack"),
-        ):
-            if self.reroll_pack.series == "A1":
-                self.tap_until(
-                    region=(250, 820, 288, 852),
-                    image_name="SmallBack",
-                    click_x=362,
-                    click_y=366,
-                )
-                if self.reroll_pack != RerollPack.MEWTWO:
-                    if not self.screen_search(
-                        image_path=self.get_image_path("Point"),
-                        region=(464, 700, 492, 748),
-                    ):
-                        self.adb_tap(272, 831)
-                    if self.reroll_pack == RerollPack.CHARIZARD:
-                        self.adb_tap(108, 529)
-                    elif self.reroll_pack == RerollPack.PIKACHU:
-                        self.adb_tap(422, 529)
-            elif self.reroll_pack.series == "A1a":
-                self.tap_until(
-                    region=(250, 820, 288, 852),
-                    image_name="SmallBack",
-                    click_x=184,
-                    click_y=366,
-                )
-            else:
-                LOGGER.error(
-                    self.format_log(f"Invalid pack series: {self.reroll_pack.series}")
-                )
+        if self.reroll_pack.series == "A1":
+            self.tap_until(
+                region=(464, 700, 492, 748),
+                image_name="Point",
+                click_x=403,
+                click_y=320,
+            )
+            time.sleep(1)
+            if self.reroll_pack == RerollPack.CHARIZARD:
+                self.adb_tap(108, 529)
+            elif self.reroll_pack == RerollPack.PIKACHU:
+                self.adb_tap(422, 529)
+        elif self.reroll_pack.series == "A1a":
+            self.tap_until(
+                region=(250, 820, 288, 852),
+                image_name="SmallBack",
+                click_x=184,
+                click_y=366,
+            )
+        else:
+            LOGGER.error(
+                self.format_log(f"Invalid pack series: {self.reroll_pack.series}")
+            )
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 1:
             self.open_pack(pack_num=2)
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 2:
@@ -996,8 +985,8 @@ class Reroll:
         check_id = self.checker.get_check_id()
         if check_id:
             self.tap_until(
-                region=(44, 798, 88, 838),
-                image_name="Commu",
+                region=(251, 907, 287, 943),
+                image_name="OnCommu",
                 click_x=270,
                 click_y=924,
             )
@@ -1279,8 +1268,8 @@ class Reroll:
         获取朋友ID
         """
         self.tap_until(
-            region=(44, 798, 88, 838),
-            image_name="Commu",
+            region=(251, 907, 287, 943),
+            image_name="OnCommu",
             click_x=270,
             click_y=924,
         )
@@ -1322,7 +1311,6 @@ class Reroll:
             image_name="ComfirmDelete",
             click_x=338,
             click_y=781,
-            delay_ms=210,
         )
         self.tap_until(
             region=(190, 392, 315, 412),
