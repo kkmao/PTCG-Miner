@@ -1097,6 +1097,10 @@ class Reroll:
                 screenshot=wp_screenshot,
                 image_path=self.get_image_path("Lucky"),
                 region=(233, 226, 310, 247),
+            ) or self.image_search(
+                screenshot=wp_screenshot,
+                image_path=self.get_image_path("WonderRare"),
+                region=(234, 226, 306, 246),
             ):
                 if self.image_search(
                     screenshot=wp_screenshot,
