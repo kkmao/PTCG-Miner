@@ -3,16 +3,19 @@ import logging
 import os
 import pytesseract
 import yaml
-from packchecker import PackChecker
+from localchecker import LocalChecker
+from remotechecker import RemoteChecker
 from reroll import Reroll
 
 DEAFULT_SCREENSHOT_DIR = "screenshot"
 DEFAUlT_BACKUP_DIR = "backup"
 DEFAUlT_LOG_DIR = "log"
+DEFAUlT_DATA_DIR = "data"
 
 os.makedirs(DEAFULT_SCREENSHOT_DIR, exist_ok=True)
 os.makedirs(DEFAUlT_BACKUP_DIR, exist_ok=True)
 os.makedirs(DEFAUlT_LOG_DIR, exist_ok=True)
+os.makedirs(DEFAUlT_DATA_DIR, exist_ok=True)
 
 # Load configuration from settings.yaml
 with open("settings.yaml", "r") as config_file:
@@ -22,15 +25,15 @@ debug_mode = config.get("debug", False)
 reroll_config = config.get("reroll", {})
 adb_ports = config.get("adb_ports", [])
 pack_checker_config = config.get("pack_checker", {})
-use_pack_checker = pack_checker_config.get("use_checker", False)
+use_pack_checker = pack_checker_config.get("use_remote_checker", False)
 checker = (
-    PackChecker(
+    RemoteChecker(
         pack_checker_config.get("url"),
         pack_checker_config.get("username"),
         pack_checker_config.get("password"),
     )
     if use_pack_checker
-    else None
+    else LocalChecker(f"{DEFAUlT_DATA_DIR}/data.db")
 )
 tesseract_path = config.get("tesseract_path", None)
 if tesseract_path:

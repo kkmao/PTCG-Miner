@@ -526,7 +526,7 @@ class Reroll:
                 self.get_image_path("Weak"),
                 region=(114, 821, 146, 832),
             ):
-                self.adb_swipe(277, 856, 277, 207, duration=210)
+                self.adb_swipe(277, 856, 277, 207, duration=160)
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 45:
                     raise RerollStuckException(
@@ -1262,8 +1262,11 @@ class Reroll:
                 region=(440, 291, 495, 346),
             ):
                 self.adb_tap(467, 318)
-            if self.checker.get_valid(check_id=friend_code):
+            gp_valid = self.checker.get_valid(check_id=friend_code)
+            if gp_valid == 1:
                 return True
+            elif gp_valid == -1:
+                return False
         self.checker.set_valid(check_id=friend_code, valid=-1)
         return False
 
