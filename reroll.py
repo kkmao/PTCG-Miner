@@ -1,14 +1,13 @@
 import os
 import logging
 import time
-import subprocess
 import pyautogui
 import pytesseract
-import numpy as np
 import cv2
 from datetime import datetime, timezone
 from enum import Enum, auto
 from packchecker import PackChecker
+from adbutils import AdbDevice
 
 
 LOGGER = logging.getLogger("Reroll")
@@ -71,9 +70,9 @@ class Reroll:
 
     def __init__(
         self,
-        adb_port,
         reroll_pack,
         checker: PackChecker,
+        adb_device: AdbDevice,
         debug_mode=False,
         delay_ms=DEFAULT_DELAY_MS,
         game_speed=DEFAULT_GAME_SPEED,
@@ -105,10 +104,9 @@ class Reroll:
         self.current_pack = 0
         self.wp_checked = False
         # 连接到 ADB 服务器
-        adb_path = os.path.join(os.curdir, "adb", "platform-tools", "adb.exe")
-        self.adb_port = adb_port
-        self.adb_cmd = [adb_path, "-s", f"127.0.0.1:{adb_port}"]
-        subprocess.run([adb_path, "connect", f"127.0.0.1:{adb_port}"])
+        self.adb_device = adb_device
+        # 获取设备端口号
+        self.adb_port = adb_device.get_serialno().split(":")[-1]
 
     def format_log(self, message):
         return f"[127.0.0.1:{self.adb_port}] {message}"
@@ -122,8 +120,7 @@ class Reroll:
         """
         使用 ADB 点击模拟器屏幕上的特定位置
         """
-        cmd = self.adb_cmd + ["shell", "input", "tap", str(x), str(y)]
-        subprocess.run(cmd)
+        self.adb_device.click(x, y)
         if delay:
             time.sleep(self.delay_ms / 1000)
 
@@ -138,60 +135,30 @@ class Reroll:
         """
         if duration is None:
             duration = self.swipe_speed
-        cmd = self.adb_cmd + [
-            "shell",
-            "input",
-            "swipe",
-            str(x1),
-            str(y1),
-            str(x2),
-            str(y2),
-            str(duration),
-        ]
-        subprocess.run(cmd)
+        self.adb_device.swipe(x1, y1, x2, y2, duration / 1000)
         time.sleep(duration * 1.2 / 1000)
 
     def adb_input(self, text):
         """
         使用 ADB 输入文本
         """
-        cmd = self.adb_cmd + ["shell", "input", "text", text]
-        subprocess.run(cmd)
+        self.adb_device.shell(["input", "text", text])
         time.sleep(self.delay_ms / 1000)
 
     def adb_screenshot(self):
         """
         使用 ADB 捕获设备屏幕内容
         """
-        adb_cmd = self.adb_cmd + ["exec-out", "screencap", "-p"]
-
-        # 执行 adb exec-out screencap 命令并读取原始屏幕数据
-        process = subprocess.Popen(adb_cmd, stdout=subprocess.PIPE)
-        raw_data = process.stdout.read()
-        process.terminate()
-
-        # 将原始数据转换为图像
-        img_array = np.frombuffer(raw_data, np.uint8)
-        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-        return img
+        return self.adb_device.screenshot()
 
     def restart_game_instance(self):
         """
         重启游戏
         """
-        subprocess.run(
-            self.adb_cmd + ["shell", "am", "force-stop", "jp.pokemon.pokemontcgp"]
-        )
+        self.adb_device.app_stop("jp.pokemon.pokemontcgp")
         time.sleep(1)
-        subprocess.run(
-            self.adb_cmd
-            + [
-                "shell",
-                "am",
-                "start",
-                "-n",
-                "jp.pokemon.pokemontcgp/com.unity3d.player.UnityPlayerActivity",
-            ]
+        self.adb_device.app_start(
+            "jp.pokemon.pokemontcgp", "com.unity3d.player.UnityPlayerActivity"
         )
         time.sleep(1)
         self.wp_checked = True
@@ -204,25 +171,14 @@ class Reroll:
         """
         try:
             # 停止应用
-            subprocess.run(
-                self.adb_cmd + ["shell", "am", "force-stop", "jp.pokemon.pokemontcgp"],
-                check=True,
-            )
+            self.adb_device.app_stop("jp.pokemon.pokemontcgp")
             time.sleep(1)
 
             # 检查账户数据文件是否存在
-            result = subprocess.run(
-                self.adb_cmd
-                + [
-                    "shell",
-                    "su -c 'ls /data/data/jp.pokemon.pokemontcgp/shared_prefs/deviceAccount:.xml'",
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                check=True,
+            result = self.adb_device.shell(
+                "su -c 'ls /data/data/jp.pokemon.pokemontcgp/shared_prefs/deviceAccount:.xml'"
             )
-            if "No such file or directory" in result.stderr:
+            if "No such file or directory" in result:
                 LOGGER.warning(self.format_log("No account data found."))
                 self.reset()
                 return
@@ -236,36 +192,31 @@ class Reroll:
                 )
 
             # 复制账户数据文件到 SD 卡
-            subprocess.run(
-                self.adb_cmd
-                + [
-                    "shell",
-                    "su -c 'cp /data/data/jp.pokemon.pokemontcgp/shared_prefs/deviceAccount:.xml /sdcard/deviceAccount:.xml'",
-                ],
-                check=True,
+            result = self.adb_device.shell(
+                "su -c 'cp /data/data/jp.pokemon.pokemontcgp/shared_prefs/deviceAccount:.xml /sdcard/'"
             )
+            if result:
+                raise Exception(result)
 
             # 从 SD 卡拉取备份文件到本地
-            subprocess.run(
-                self.adb_cmd
-                + ["pull", "/sdcard/deviceAccount:.xml", f"backup/{backup_filename}"],
-                check=True,
+            result = self.adb_device.sync.pull(
+                "/sdcard/deviceAccount:.xml",
+                os.path.join(os.curdir, "backup", backup_filename),
             )
+            if int(result) == 0:
+                raise Exception("Failed to pull backup file")
 
             # 删除设备上的账户数据文件
-            subprocess.run(
-                self.adb_cmd
-                + [
-                    "shell",
-                    "su -c 'rm -f /data/data/jp.pokemon.pokemontcgp/shared_prefs/deviceAccount:.xml'",
-                ],
-                check=True,
+            result = self.adb_device.shell(
+                "su -c 'rm -f /data/data/jp.pokemon.pokemontcgp/shared_prefs/deviceAccount:.xml'"
             )
+            if result:
+                raise Exception(result)
 
             LOGGER.info(self.format_log(f"Account data backed up as {backup_filename}"))
             self.reset()
 
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             LOGGER.error(self.format_log(f"Error during backup: {e}"))
             self.state = RerollState.BREAKDOWN
 

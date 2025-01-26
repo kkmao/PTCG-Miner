@@ -3,6 +3,7 @@ import logging
 import os
 import pytesseract
 import yaml
+from adbutils import adb
 from localchecker import LocalChecker
 from remotechecker import RemoteChecker
 from reroll import Reroll
@@ -47,25 +48,30 @@ logging.basicConfig(
 )
 
 
-def start_reroll(adb_port):
-    reroll_instance = Reroll(
-        adb_port,
-        reroll_pack=reroll_config.get("pack", None),
-        checker=checker,
-        debug_mode=debug_mode,
-        delay_ms=reroll_config.get("delay_ms"),
-        game_speed=reroll_config.get("game_speed"),
-        swipe_speed=reroll_config.get("swipe_speed"),
-        confidence=reroll_config.get("confidence"),
-        timeout=reroll_config.get("timeout"),
-        language=reroll_config.get("language"),
-        account_name=reroll_config.get("account_name"),
-        max_packs_to_open=reroll_config.get("max_packs_to_open"),
-    )
-    reroll_instance.start()
+def start_reroll(adb_device):
+    if adb_device.get_state() == "device":
+        reroll_instance = Reroll(
+            reroll_pack=reroll_config.get("pack", None),
+            checker=checker,
+            adb_device=adb_device,
+            debug_mode=debug_mode,
+            delay_ms=reroll_config.get("delay_ms"),
+            game_speed=reroll_config.get("game_speed"),
+            swipe_speed=reroll_config.get("swipe_speed"),
+            confidence=reroll_config.get("confidence"),
+            timeout=reroll_config.get("timeout"),
+            language=reroll_config.get("language"),
+            account_name=reroll_config.get("account_name"),
+            max_packs_to_open=reroll_config.get("max_packs_to_open"),
+        )
+        reroll_instance.start()
+    else:
+        logging.warning(f"Device {adb_device.serial} is not connected")
 
 
 if __name__ == "__main__":
+    for adb_port in adb_ports:
+        adb.connect(f"127.0.0.1:{adb_port}")
     max_workers = config.get("max_workers", None)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        executor.map(start_reroll, adb_ports)
+        executor.map(start_reroll, adb.device_list())
