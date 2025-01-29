@@ -32,14 +32,9 @@ adb_ports:
   - "16416"
   - "16448"
   - "16480"
-# 验包配置项
-pack_checker:
-  use_checker: true # 是否启用自动验包功能
-  url: "http://example.com"
-  username: "your_username"
-  password: "your_password"
-# tesseract路径，使用自动验包功能时需要配置
-tesseract_path: "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+# 需要添加的好友FC
+friend_codes:
+  - ""
 ```
 
 # 运行
