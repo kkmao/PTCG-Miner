@@ -6,7 +6,6 @@ import pytesseract
 import cv2
 from datetime import datetime, timezone
 from enum import Enum, auto
-from packchecker import PackChecker
 from adbutils import AdbDevice
 
 
@@ -71,7 +70,6 @@ class Reroll:
     def __init__(
         self,
         reroll_pack,
-        checker: PackChecker,
         adb_device: AdbDevice,
         debug_mode=False,
         delay_ms=DEFAULT_DELAY_MS,
@@ -82,12 +80,12 @@ class Reroll:
         language=DEFAULT_LANGUAGE,
         account_name="SlvGP",
         max_packs_to_open=DEFAULT_MAX_PACKS_TO_OPEN,
+        friend_code_list=None,
     ):
         if isinstance(reroll_pack, RerollPack):
             self.reroll_pack = reroll_pack
         else:
             self.reroll_pack = RerollPack[reroll_pack]
-        self.checker = checker
         self.debug_mode = debug_mode
         self.delay_ms = delay_ms
         self.game_speed = game_speed
@@ -96,6 +94,7 @@ class Reroll:
         self.timeout = timeout
         self.language = language
         self.account_name = account_name
+        self.friend_code_list = friend_code_list
         if isinstance(max_packs_to_open, int):
             self.max_packs_to_open = max(1, min(max_packs_to_open, 4))
         # 初始化
@@ -928,19 +927,17 @@ class Reroll:
         if self.state != RerollState.FOUNDGP:
             self.state = RerollState.COMPLETED
 
-    def check_god_pack(self):
+    def add_friends(self):
         """
-        验证GP是否有效
+        添加好友
         """
-        self.wp_checked = True
-        check_id = self.checker.get_check_id()
-        if check_id:
-            self.tap_until(
-                region=(251, 907, 287, 943),
-                image_name="OnCommu",
-                click_x=270,
-                click_y=924,
-            )
+        self.tap_until(
+            region=(251, 907, 287, 943),
+            image_name="OnCommu",
+            click_x=270,
+            click_y=924,
+        )
+        for check_id in self.friend_code_list:
             self.tap_until(
                 region=(158, 136, 178, 151),
                 image_name="FriendNum",
@@ -968,183 +965,85 @@ class Reroll:
                     click_x=271,
                     click_y=919,
                 )
-                # back to home
-                self.tap_until(
-                    region=(120, 681, 169, 710),
-                    image_name="WonderIcon",
-                    click_x=70,
-                    click_y=924,
-                )
-                return
+                continue
             while self.screen_search(
                 image_path=self.get_image_path("Apply"),
                 region=(324, 407, 379, 450),
             ):
                 self.adb_tap(469, 422)
-                time.sleep(self.delay_ms / 1000)
+                time.sleep(self.delay_ms / 500)
             self.tap_until(
                 region=(44, 798, 88, 838),
                 image_name="Commu",
                 click_x=271,
                 click_y=882,
             )
-            # wait be accepted
-            start_time = time.time()
-            while True:
-                self.tap_until(
-                    region=(158, 136, 178, 151),
-                    image_name="FriendNum",
-                    click_x=70,
-                    click_y=831,
-                )
-                friend_screenshot = self.adb_screenshot()
-                if self.image_search(
-                    image_path=self.get_image_path("FriendAdded"),
-                    screenshot=friend_screenshot,
-                    region=(481, 189, 517, 227),
-                ) or self.image_search(
-                    region=(479, 304, 503, 328),
-                    screenshot=friend_screenshot,
-                    image_path=self.get_image_path("FriendResult"),
-                ):
-                    break
-                self.tap_until(
-                    region=(44, 798, 88, 838),
-                    image_name="Commu",
-                    click_x=271,
-                    click_y=882,
-                )
-                if time.time() - start_time > MAX_WAIT_FRIEND_TIME_SECOND:
-                    LOGGER.info(self.format_log("Timeout for checking friend request"))
-                    # back to home
-                    self.tap_until(
-                        region=(120, 681, 169, 710),
-                        image_name="WonderIcon",
-                        click_x=70,
-                        click_y=924,
-                    )
-                    return
-            self.tap_until(
-                region=(44, 798, 88, 838),
-                image_name="Commu",
-                click_x=271,
-                click_y=882,
-            )
-            self.tap_until(
-                region=(120, 681, 169, 710),
-                image_name="WonderIcon",
-                click_x=70,
-                click_y=924,
-            )
-            self.tap_until(
-                region=(35, 182, 53, 200),
-                image_name="Countdown",
-                click_x=148,
-                click_y=742,
-            )
-            # find frriend's pack
-            wp_screenshot = self.adb_screenshot()
-            if self.image_search(
-                screenshot=wp_screenshot,
-                image_path=self.get_image_path("Lucky"),
-                region=(233, 226, 310, 247),
-            ) or self.image_search(
-                screenshot=wp_screenshot,
-                image_path=self.get_image_path("WonderRare"),
-                region=(234, 226, 306, 246),
-            ):
-                if self.image_search(
-                    screenshot=wp_screenshot,
-                    image_path=self.get_image_path("Free2"),
-                    region=(77, 789, 158, 843),
-                ):
-                    self.adb_swipe(121, 742, 121, 176, 500)
-                    self.tap_until(
-                        region=(228, 676, 270, 697),
-                        image_name="WPComfirm",
-                        click_x=104,
-                        click_y=842,
-                    )
-                else:
-                    self.tap_until(
-                        region=(228, 676, 270, 697),
-                        image_name="WPComfirm",
-                        click_x=104,
-                        click_y=842,
-                    )
-            elif self.image_search(
-                screenshot=wp_screenshot,
-                image_path=self.get_image_path("Free"),
-                region=(233, 226, 310, 247),
-            ):
-                self.tap_until(
-                    region=(228, 676, 270, 697),
-                    image_name="WPComfirm",
-                    click_x=104,
-                    click_y=809,
-                )
-            elif self.image_search(
-                screenshot=wp_screenshot,
-                image_path=self.get_image_path("Friends"),
-                region=(120, 246, 151, 260),
-            ):
-                self.tap_until(
-                    region=(228, 676, 270, 697),
-                    image_name="WPComfirm",
-                    click_x=83,
-                    click_y=639,
-                )
-            # check god pack
-            if self.screen_search(
-                image_path=self.get_image_path("Friends"),
-                region=(97, 182, 128, 196),
-            ):
-                wp_comfirm_screenshot = self.adb_screenshot()
-                if self.image_search(
-                    screenshot=wp_comfirm_screenshot,
-                    image_path=self.get_image_path("Cost4"),
-                    region=(128, 802, 184, 834),
-                ):
-                    # report god pack valid
-                    self.checker.set_valid(check_id=check_id, valid=True)
-                    # save screenshot
-                    cv2.imwrite(
-                        os.path.join(
-                            os.curdir,
-                            "screenshot",
-                            f"gp_result_{check_id}_{int(time.time())}.png",
-                        ),
-                        wp_comfirm_screenshot,
-                    )
-                else:
-                    self.checker.set_valid(check_id=check_id, valid=False)
-                    cv2.imwrite(
-                        os.path.join(
-                            os.curdir,
-                            "screenshot",
-                            f"invalid_result_{check_id}_{int(time.time())}.png",
-                        ),
-                        wp_comfirm_screenshot,
-                    )
-            self.tap_until(
-                region=(251, 906, 289, 944),
-                image_name="Home",
-                click_x=38,
-                click_y=58,
-            )
-            # unfriend
-            self.tap_until(
-                region=(44, 798, 88, 838),
-                image_name="Commu",
-                click_x=270,
-                click_y=924,
-            )
+        # wait be accepted
+        start_time = time.time()
+        while True:
             self.tap_until(
                 region=(158, 136, 178, 151),
                 image_name="FriendNum",
                 click_x=70,
                 click_y=831,
             )
+            self.adb_tap(269, 823)
+            friend_screenshot = self.adb_screenshot()
+            if self.image_search(
+                image_path=self.get_image_path("FriendAll"),
+                screenshot=friend_screenshot,
+                region=(171, 444, 243, 464),
+            ):
+                break
+            self.tap_until(
+                region=(44, 798, 88, 838),
+                image_name="Commu",
+                click_x=271,
+                click_y=882,
+            )
+            if time.time() - start_time > MAX_WAIT_FRIEND_TIME_SECOND:
+                LOGGER.info(self.format_log("Timeout for checking friend request"))
+                # back to home
+                break
+        self.tap_until(
+            region=(44, 798, 88, 838),
+            image_name="Commu",
+            click_x=271,
+            click_y=882,
+        )
+        self.tap_until(
+            region=(120, 681, 169, 710),
+            image_name="WonderIcon",
+            click_x=70,
+            click_y=924,
+        )
+
+    def auto_unfriend_all(self):
+        # unfriend
+        self.tap_until(
+            region=(44, 798, 88, 838),
+            image_name="Commu",
+            click_x=270,
+            click_y=924,
+        )
+        while True:
+            self.tap_until(
+                region=(158, 136, 178, 151),
+                image_name="FriendNum",
+                click_x=70,
+                click_y=831,
+            )
+            if self.screen_search(
+                image_path=self.get_image_path("NoFriend"),
+                region=(225, 445, 297, 463),
+            ):
+                self.tap_until(
+                    region=(44, 798, 88, 838),
+                    image_name="Commu",
+                    click_x=271,
+                    click_y=882,
+                )
+                break
             self.tap_until(
                 region=(164, 703, 188, 719),
                 image_name="Friended",
@@ -1164,30 +1063,6 @@ class Reroll:
                 click_x=271,
                 click_y=882,
             )
-            # back to home
-            self.tap_until(
-                region=(120, 681, 169, 710),
-                image_name="WonderIcon",
-                click_x=70,
-                click_y=924,
-            )
-        else:
-            LOGGER.info(self.format_log("No check id found."))
-
-    def wait_check_god_pack(self):
-        """
-        等待检查GP是否有效
-        """
-        valid = False
-        friend_code = None
-        try:
-            friend_code = self.get_friend_code()
-            self.checker.save_check_id(check_id=friend_code, pack_num=self.current_pack)
-            valid = self.auto_friend(friend_code=friend_code)
-        except Exception as e:
-            LOGGER.error(self.format_log(f"Error during check god pack: {e}"))
-        finally:
-            self.backup_account(valid=valid, friend_code=friend_code)
 
     def auto_friend(self, friend_code):
         """
@@ -1290,19 +1165,17 @@ class Reroll:
                 elif self.state == RerollState.REGISTERED:
                     self.pass_tutorial()
                 elif self.state == RerollState.FINISHED_TUTORIAL:
-                    if self.checker is not None and not self.wp_checked:
-                        self.check_god_pack()
+                    self.add_friends()
                     if self.max_packs_to_open > 1:
                         self.open_234_pack()
                     else:
                         self.state = RerollState.COMPLETED
                 elif self.state == RerollState.COMPLETED:
+                    self.auto_unfriend_all()
+                    # backup account
                     self.delete_account()
                 elif self.state == RerollState.FOUNDGP:
-                    if self.checker is not None:
-                        self.wait_check_god_pack()
-                    else:
-                        self.backup_account()
+                    self.backup_account()
                 elif self.state == RerollState.BREAKDOWN:
                     LOGGER.error(self.format_log("Breakdown"))
                     break

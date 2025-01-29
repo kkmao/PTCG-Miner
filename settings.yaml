@@ -19,9 +19,5 @@ adb_ports:
   - "16544"
   - "16576"
 
-pack_checker:
-  use_checker: true
-  url: "http://localhost:5000"
-  username: "username"
-  password: "password"
-  use_remote_checker: false
+friend_codes:
+  - ""
