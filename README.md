@@ -26,7 +26,7 @@ reroll:
   timeout: 45 # 超时时间，操作超时会重启游戏
   language: "Chinese" # 游戏语言，目前仅支持中文
   account_name: "SlvGP" # 创建账号的名称
-  max_packs_to_open: 4 # 开卡包数量, [1, 4]
+  max_packs_to_open: 2 # 开卡包数量, [1, 4]
 # 模拟器的ADB端口号
 adb_ports:
   - "16416"
