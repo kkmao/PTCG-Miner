@@ -2,7 +2,7 @@ debug: false
 max_workers: 8
 tesseract_path: "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 reroll:
-  pack: "PIKACHU"
+  pack: "PALKIA"
   delay_ms: 300
   game_speed: 3
   swipe_speed: 480

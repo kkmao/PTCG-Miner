@@ -48,6 +48,8 @@ class RerollPack(Enum):
     CHARIZARD = (2, "A1")
     PIKACHU = (3, "A1")
     MEW = (4, "A1a")
+    DIALGA = (5, "A2")
+    PALKIA = (6, "A2")
 
     def __init__(self, num, series):
         self.num = num
@@ -345,7 +347,7 @@ class Reroll:
                             "screenshot",
                             f"screenshot_{self.adb_port}_{int(time.time())}.png",
                         )
-                        cv2.imwrite(stuck_screenshot_path, stuck_screenshot)
+                        stuck_screenshot.save(stuck_screenshot_path)
 
                     raise RerollStuckException(
                         f"Instance {self.adb_port} has been stuck at {image_name}"
@@ -389,7 +391,7 @@ class Reroll:
                 "screenshot",
                 f"god_pack_{self.adb_port}_{int(time.time())}.png",
             )
-            cv2.imwrite(god_pack_screenshot_path, screenshot)
+            screenshot.save(god_pack_screenshot_path)
         if self.image_search(
             image_path=self.get_image_path("Immerse"),
             screenshot=screenshot,
@@ -406,7 +408,9 @@ class Reroll:
         """
         打开卡包
         """
-        pack_icon_path = self.get_image_path(self.reroll_pack.series)
+        pack_icon_name = (
+            self.reroll_pack.series if pack_num > 1 else RerollPack.MEWTWO.series
+        )
         swipe_duration = self.swipe_speed
 
         if pack_num > 0:
@@ -428,7 +432,7 @@ class Reroll:
                 )
             self.tap_until(
                 region=(405, 454, 431, 471),
-                image_name=self.reroll_pack.series,
+                image_name=pack_icon_name,
                 click_x=487,
                 click_y=905,
             )
@@ -446,7 +450,7 @@ class Reroll:
 
         swipe_times = 0
         while self.screen_search(
-            image_path=pack_icon_path,
+            image_path=self.get_image_path(pack_icon_name),
             region=(282, 228, 357, 253),
         ):
             if swipe_times > 1:
@@ -510,7 +514,9 @@ class Reroll:
                 delay_ms=110,
             )
             time.sleep(self.delay_ms / 1000)
-            is_god_pack, check_need = self.rarity_check()
+            is_god_pack, check_need = False, False
+            if pack_num > 1:
+                is_god_pack, check_need = self.rarity_check()
             if is_god_pack:
                 if check_need:
                     self.state = RerollState.FOUNDGP
@@ -519,8 +525,8 @@ class Reroll:
             self.adb_tap(268, 903)
             if pack_num == 1:
                 self.tap_until(
-                    region=(207, 405, 261, 425),
-                    image_name="Unlock",
+                    region=(240, 51, 290, 101),
+                    image_name="Dex",
                     click_x=522,
                     click_y=889,
                     delay_ms=110,
@@ -534,27 +540,23 @@ class Reroll:
                 )
             elif pack_num == 3:
                 self.tap_until(
-                    region=(283, 171, 430, 222),
-                    image_name="Hourglass",
+                    region=(240, 51, 290, 101),
+                    image_name="Dex",
                     click_x=522,
                     click_y=889,
                     delay_ms=110,
                     skip_time_ms=5,
                 )
-                if self.screen_search(
-                    self.get_image_path("next"),
-                    region=(249, 851, 291, 872),
-                ):
-                    self.tap_until(
-                        region=(207, 405, 261, 425),
-                        image_name="Hourglass",
-                        click_x=272,
-                        click_y=869,
-                    )
+                self.tap_until(
+                    region=(283, 171, 430, 222),
+                    image_name="Hourglass",
+                    click_x=272,
+                    click_y=869,
+                )
             else:
                 self.tap_until(
-                    region=(237, 804, 301, 868),
-                    image_name="Back",
+                    region=(240, 51, 290, 101),
+                    image_name="Dex",
                     click_x=522,
                     click_y=889,
                     delay_ms=110,
@@ -581,22 +583,23 @@ class Reroll:
             click_y=821,
         )
         self.tap_until(
-            region=(98, 85, 166, 153),
+            region=(99, 72, 167, 140),
             image_name="Get",
             click_x=270,
             click_y=350,
         )
         if tutorial_pack:
             self.tap_until(
-                region=(249, 760, 291, 781),
-                image_name="next",
+                region=(267, 354, 326, 378),
+                image_name="Tutorial",
                 click_x=522,
                 click_y=889,
-                skip_time_ms=5,
+                delay_ms=110,
+                skip_time_ms=3,
             )
             self.tap_until(
-                region=(249, 760, 291, 781),
-                image_name="next",
+                region=(267, 354, 326, 378),
+                image_name="Tutorial",
                 click_x=272,
                 click_y=865,
             )
@@ -887,6 +890,21 @@ class Reroll:
                 click_x=184,
                 click_y=366,
             )
+        elif self.reroll_pack.series == "A2":
+            if self.reroll_pack == RerollPack.DIALGA:
+                self.tap_until(
+                    region=(464, 700, 492, 748),
+                    image_name="Point",
+                    click_x=268,
+                    click_y=312,
+                )
+            elif self.reroll_pack == RerollPack.PALKIA:
+                self.tap_until(
+                    region=(464, 700, 492, 748),
+                    image_name="Point",
+                    click_x=420,
+                    click_y=312,
+                )
         else:
             LOGGER.error(
                 self.format_log(f"Invalid pack series: {self.reroll_pack.series}")
@@ -944,8 +962,12 @@ class Reroll:
                 click_x=70,
                 click_y=831,
             )
-            self.adb_tap(485, 143)
-            self.adb_tap(251, 795)
+            while not self.screen_search(
+                image_path=self.get_image_path("Search"),
+                region=(432, 784, 462, 814),
+            ):
+                self.adb_tap(485, 143)
+                self.adb_tap(251, 795)
             self.adb_input(check_id)
             self.tap_until(
                 region=(479, 304, 503, 328),
@@ -1135,8 +1157,18 @@ class Reroll:
                 click_x=474,
                 click_y=893,
             )
-            self.adb_tap(270, 786)
-            self.adb_tap(235, 415)
+            self.tap_until(
+                region=(52, 393, 87, 431),
+                image_name="AccountM",
+                click_x=270,
+                click_y=786,
+            )
+            self.tap_until(
+                region=(114, 536, 192, 557),
+                image_name="NinAccount",
+                click_x=235,
+                click_y=415,
+            )
         else:
             self.adb_tap(224, 435)
         self.tap_until(
@@ -1146,7 +1178,7 @@ class Reroll:
             click_y=781,
         )
         self.tap_until(
-            region=(190, 392, 315, 412),
+            region=(172, 365, 297, 385),
             image_name="Deleted",
             click_x=457,
             click_y=635,
@@ -1171,7 +1203,7 @@ class Reroll:
                     else:
                         self.state = RerollState.COMPLETED
                 elif self.state == RerollState.COMPLETED:
-                    self.auto_unfriend_all()
+                    # self.auto_unfriend_all()
                     # backup account
                     self.delete_account()
                 elif self.state == RerollState.FOUNDGP:
