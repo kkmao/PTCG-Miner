@@ -955,19 +955,34 @@ class Reroll:
             click_x=270,
             click_y=924,
         )
+        self.tap_until(
+            region=(158, 136, 178, 151),
+            image_name="FriendNum",
+            click_x=70,
+            click_y=831,
+        )
+        while not self.screen_search(
+            image_path=self.get_image_path("Search"),
+            region=(432, 784, 462, 814),
+        ):
+            self.adb_tap(485, 143)
+            self.adb_tap(251, 795)
+        is_start = True
         for check_id in self.friend_code_list:
-            self.tap_until(
-                region=(158, 136, 178, 151),
-                image_name="FriendNum",
-                click_x=70,
-                click_y=831,
-            )
-            while not self.screen_search(
-                image_path=self.get_image_path("Search"),
-                region=(432, 784, 462, 814),
-            ):
-                self.adb_tap(485, 143)
-                self.adb_tap(251, 795)
+            if not is_start:
+                while not self.screen_search(
+                    image_path=self.get_image_path("Search"),
+                    region=(432, 784, 462, 814),
+                ):
+                    self.adb_tap(485, 143)
+                while not self.screen_search(
+                    image_path=self.get_image_path("OK"),
+                    region=(481, 899, 504, 923),
+                ):
+                    self.adb_tap(382, 795)
+                for _ in range(16):
+                    self.adb_device.keyevent(67)
+            is_start = False
             self.adb_input(check_id)
             self.tap_until(
                 region=(479, 304, 503, 328),
@@ -994,12 +1009,12 @@ class Reroll:
             ):
                 self.adb_tap(469, 422)
                 time.sleep(self.delay_ms / 500)
-            self.tap_until(
-                region=(44, 798, 88, 838),
-                image_name="Commu",
-                click_x=271,
-                click_y=882,
-            )
+        self.tap_until(
+            region=(44, 798, 88, 838),
+            image_name="Commu",
+            click_x=271,
+            click_y=882,
+        )
         # wait be accepted
         start_time = time.time()
         while True:
