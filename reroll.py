@@ -7,6 +7,7 @@ import cv2
 from datetime import datetime, timezone
 from enum import Enum, auto
 from adbutils import AdbDevice
+from friendseeker import FriendSeeker
 
 
 LOGGER = logging.getLogger("Reroll")
@@ -73,6 +74,7 @@ class Reroll:
         self,
         reroll_pack,
         adb_device: AdbDevice,
+        friend_code_seeker: FriendSeeker,
         debug_mode=False,
         delay_ms=DEFAULT_DELAY_MS,
         game_speed=DEFAULT_GAME_SPEED,
@@ -82,7 +84,6 @@ class Reroll:
         language=DEFAULT_LANGUAGE,
         account_name="SlvGP",
         max_packs_to_open=DEFAULT_MAX_PACKS_TO_OPEN,
-        friend_code_list=None,
     ):
         if isinstance(reroll_pack, RerollPack):
             self.reroll_pack = reroll_pack
@@ -96,7 +97,7 @@ class Reroll:
         self.timeout = timeout
         self.language = language
         self.account_name = account_name
-        self.friend_code_list = friend_code_list
+        self.friend_code_seeker = friend_code_seeker
         if isinstance(max_packs_to_open, int):
             self.max_packs_to_open = max(1, min(max_packs_to_open, 4))
         # 初始化
@@ -968,7 +969,8 @@ class Reroll:
             self.adb_tap(485, 143)
             self.adb_tap(251, 795)
         is_start = True
-        for check_id in self.friend_code_list:
+        friend_code_list = self.friend_code_seeker.get_friend_codes()
+        for check_id in friend_code_list:
             if not is_start:
                 while not self.screen_search(
                     image_path=self.get_image_path("Search"),

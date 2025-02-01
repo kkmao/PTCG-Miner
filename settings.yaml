@@ -20,4 +20,11 @@ adb_ports:
   - "16576"
 
 friend_codes:
-  - ""
+  use_remote: true
+  remote_friend_codes:
+    url: "http://example.com"
+    username: "your_username"
+    password: "your_password"
+  use_local: false
+  local_friend_codes:
+    path: "friend_codes.json"
