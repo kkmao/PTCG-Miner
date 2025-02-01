@@ -531,7 +531,7 @@ class Reroll:
                     click_x=522,
                     click_y=889,
                     delay_ms=110,
-                    skip_time_ms=5,
+                    skip_time_ms=10,
                 )
                 self.tap_until(
                     region=(207, 405, 261, 425),
@@ -546,7 +546,7 @@ class Reroll:
                     click_x=522,
                     click_y=889,
                     delay_ms=110,
-                    skip_time_ms=5,
+                    skip_time_ms=10,
                 )
                 self.tap_until(
                     region=(283, 171, 430, 222),
@@ -561,7 +561,7 @@ class Reroll:
                     click_x=522,
                     click_y=889,
                     delay_ms=110,
-                    skip_time_ms=5,
+                    skip_time_ms=10,
                 )
                 self.tap_until(
                     region=(251, 906, 289, 944),
@@ -591,13 +591,13 @@ class Reroll:
         )
         if tutorial_pack:
             self.tap_until(
-                region=(267, 354, 326, 378),
-                image_name="Tutorial",
-                click_x=522,
-                click_y=889,
-                delay_ms=110,
-                skip_time_ms=3,
-            )
+                    region=(240, 51, 290, 101),
+                    image_name="Dex",
+                    click_x=522,
+                    click_y=889,
+                    delay_ms=110,
+                    skip_time_ms=8,
+                )
             self.tap_until(
                 region=(267, 354, 326, 378),
                 image_name="Tutorial",
