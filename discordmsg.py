@@ -8,7 +8,7 @@ class DiscordMsg:
         self.webhook_url = webhook_url
         self.user_id = user_id
 
-    def log_to_discord(self, message, screenshot_file=None, ping=False, xml_file=None):
+    def send_message(self, message, screenshot_file=None, ping=False, xml_file=None):
         send_xml = 1  # Set this to your desired value
 
         if self.webhook_url:
@@ -45,7 +45,7 @@ class DiscordMsg:
                 except requests.RequestException as e:
                     retry_count += 1
                     if retry_count >= max_retries:
-                        print("Failed to send discord message.")
+                        print("Failed to send discord message. Error: ", e)
                         break
                     time.sleep(0.25)
                 time.sleep(0.25)

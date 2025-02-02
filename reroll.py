@@ -203,10 +203,11 @@ class Reroll:
             if result:
                 raise Exception(result)
 
+            backup_path = os.path.join(os.curdir, "backup", backup_filename)
             # 从 SD 卡拉取备份文件到本地
             result = self.adb_device.sync.pull(
                 "/sdcard/deviceAccount:.xml",
-                os.path.join(os.curdir, "backup", backup_filename),
+                backup_path,
             )
             if int(result) == 0:
                 raise Exception("Failed to pull backup file")
@@ -220,6 +221,7 @@ class Reroll:
 
             LOGGER.info(self.format_log(f"Account data backed up as {backup_filename}"))
             self.reset()
+            return backup_path
 
         except Exception as e:
             LOGGER.error(self.format_log(f"Error during backup: {e}"))
@@ -396,11 +398,6 @@ class Reroll:
                 f"god_pack_{self.adb_port}_{int(time.time())}.png",
             )
             screenshot.save(god_pack_screenshot_path)
-            if self.discord_msg:
-                self.discord_msg.log_to_discord(
-                    f"Found god pack on instance of {self.account_name}",
-                    screenshot_file=god_pack_screenshot_path,
-                )
         if self.image_search(
             image_path=self.get_image_path("Immerse"),
             screenshot=screenshot,
@@ -411,7 +408,11 @@ class Reroll:
             region=(30, 465, 425, 704),
         ):
             check_need = False
-        return is_god_pack, check_need
+        return (
+            is_god_pack,
+            check_need,
+            god_pack_screenshot_path if is_god_pack else None,
+        )
 
     def open_pack(self, pack_num=2):
         """
@@ -477,7 +478,7 @@ class Reroll:
             self.tap_until(
                 region=(114, 821, 146, 832),
                 image_name="Weak",
-                click_x=254,
+                click_x=268,
                 click_y=582,
             )
 
@@ -525,12 +526,16 @@ class Reroll:
             time.sleep(self.delay_ms / 1000)
             is_god_pack, check_need = False, False
             if pack_num > 1:
-                is_god_pack, check_need = self.rarity_check()
+                is_god_pack, check_need, god_pack_screenshot_path = self.rarity_check()
             if is_god_pack:
-                if check_need:
-                    self.state = RerollState.FOUNDGP
-                else:
-                    self.backup_account()
+                self.state = RerollState.FOUNDGP
+                if self.discord_msg:
+                    self.discord_msg.send_message(
+                        f"Found god pack!!! name: {self.account_name}, num: {pack_num - 1}",
+                        screenshot_file=god_pack_screenshot_path,
+                        ping=check_need,
+                    )
+                return
             self.adb_tap(268, 903)
             if pack_num == 1:
                 self.tap_until(
