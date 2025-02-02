@@ -744,18 +744,22 @@ class Reroll:
         self.adb_tap(275, 859)
         self.adb_tap(263, 592)
 
-        self.tap_until(
-            region=(144, 472, 216, 492),
-            image_name="Download",
-            click_x=264,
-            click_y=826,
-        )
-        self.tap_until(
-            region=(252, 419, 324, 439),
-            image_name="Complete",
-            click_x=439,
-            click_y=630,
-        )
+        if not self.screen_search(
+            image_path=self.get_image_path("Uncomplete"),
+            region=(235, 365, 269, 383),
+        ):
+            self.tap_until(
+                region=(144, 472, 216, 492),
+                image_name="Download",
+                click_x=264,
+                click_y=826,
+            )
+            self.tap_until(
+                region=(252, 419, 324, 439),
+                image_name="Complete",
+                click_x=439,
+                click_y=630,
+            )
 
         self.adb_tap(276, 630)
 
