@@ -4,6 +4,7 @@ import os
 import pytesseract
 import yaml
 from adbutils import adb
+from discordmsg import DiscordMsg
 from friendseeker import FriendSeeker
 from reroll import Reroll
 
@@ -35,6 +36,11 @@ friend_seeker = FriendSeeker(
     remote=friends_config.get("use_remote"),
     local=friends_config.get("use_local"),
 )
+discord_config = config.get("discord", {})
+discord_msg = DiscordMsg(
+    webhook_url=discord_config.get("webhook_url"),
+    user_id=discord_config.get("user_id"),
+)
 tesseract_path = config.get("tesseract_path", None)
 if tesseract_path:
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
@@ -53,6 +59,7 @@ def start_reroll(adb_device):
             reroll_pack=reroll_config.get("pack", None),
             adb_device=adb_device,
             friend_code_seeker=friend_seeker,
+            discord_msg=discord_msg,
             debug_mode=debug_mode,
             delay_ms=reroll_config.get("delay_ms"),
             game_speed=reroll_config.get("game_speed"),

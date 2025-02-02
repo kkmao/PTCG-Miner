@@ -28,3 +28,8 @@ friend_codes:
   use_local: false
   local_friend_codes:
     path: "friend_codes.json"
+
+discord:
+  use_webhook: true
+  webhook_url: "https://discord.com/api/webhooks"
+  user_id: "1234567890"

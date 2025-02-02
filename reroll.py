@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from enum import Enum, auto
 from adbutils import AdbDevice
 from friendseeker import FriendSeeker
+from discordmsg import DiscordMsg
 
 
 LOGGER = logging.getLogger("Reroll")
@@ -75,6 +76,7 @@ class Reroll:
         reroll_pack,
         adb_device: AdbDevice,
         friend_code_seeker: FriendSeeker,
+        discord_msg: DiscordMsg,
         debug_mode=False,
         delay_ms=DEFAULT_DELAY_MS,
         game_speed=DEFAULT_GAME_SPEED,
@@ -109,6 +111,7 @@ class Reroll:
         self.adb_device = adb_device
         # 获取设备端口号
         self.adb_port = adb_device.get_serialno().split(":")[-1]
+        self.discord_msg = discord_msg
 
     def format_log(self, message):
         return f"[127.0.0.1:{self.adb_port}] {message}"
@@ -393,6 +396,11 @@ class Reroll:
                 f"god_pack_{self.adb_port}_{int(time.time())}.png",
             )
             screenshot.save(god_pack_screenshot_path)
+            if self.discord_msg:
+                self.discord_msg.log_to_discord(
+                    f"Found god pack on instance of {self.account_name}",
+                    screenshot_file=god_pack_screenshot_path,
+                )
         if self.image_search(
             image_path=self.get_image_path("Immerse"),
             screenshot=screenshot,
@@ -591,13 +599,13 @@ class Reroll:
         )
         if tutorial_pack:
             self.tap_until(
-                    region=(240, 51, 290, 101),
-                    image_name="Dex",
-                    click_x=522,
-                    click_y=889,
-                    delay_ms=110,
-                    skip_time_ms=8,
-                )
+                region=(240, 51, 290, 101),
+                image_name="Dex",
+                click_x=522,
+                click_y=889,
+                delay_ms=110,
+                skip_time_ms=8,
+            )
             self.tap_until(
                 region=(267, 354, 326, 378),
                 image_name="Tutorial",
