@@ -4,6 +4,7 @@ import time
 import pyautogui
 import pytesseract
 import cv2
+import random
 from datetime import datetime, timezone
 from enum import Enum, auto
 from adbutils import AdbDevice
@@ -99,6 +100,7 @@ class Reroll:
         self.timeout = timeout
         self.language = language
         self.account_name = account_name
+        self.temp_account_name = account_name
         self.friend_code_seeker = friend_code_seeker
         if isinstance(max_packs_to_open, int):
             self.max_packs_to_open = max(1, min(max_packs_to_open, 4))
@@ -531,7 +533,7 @@ class Reroll:
                 self.state = RerollState.FOUNDGP
                 if self.discord_msg:
                     self.discord_msg.send_message(
-                        f"Found god pack!!! name: {self.account_name}, num: {pack_num - 1}",
+                        f"Found god pack!!! name: {self.temp_account_name}, num: {pack_num - 1}",
                         screenshot_file=god_pack_screenshot_path,
                         ping=check_need,
                     )
@@ -791,7 +793,8 @@ class Reroll:
 
         start_time = time.time()
         elapsed_time = 0
-        self.adb_input(self.account_name)
+        self.temp_account_name= self.account_name + str(random.randint(1, 999))
+        self.adb_input(self.temp_account_name)
 
         self.adb_tap(478, 910)
 
