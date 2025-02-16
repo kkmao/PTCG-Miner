@@ -533,7 +533,9 @@ class Reroll:
                 self.state = RerollState.FOUNDGP
                 if self.discord_msg:
                     self.discord_msg.send_message(
-                        f"Found god pack!!! name: {self.temp_account_name}, num: {pack_num - 1}",
+                        self.get_god_pack_notification(
+                            star_num=-1, pack_num=pack_num, valid=check_need
+                        ),
                         screenshot_file=god_pack_screenshot_path,
                         ping=check_need,
                     )
@@ -584,6 +586,14 @@ class Reroll:
                     click_x=340,
                     click_y=861,
                 )
+
+    def get_god_pack_notification(self, star_num: int, pack_num: int, valid: bool):
+        return (
+            "Found god pack!!\n"
+            + f"{self.temp_account_name} ()\n"
+            + f"[{star_num if star_num >= 0 else 'X'}/5][{pack_num}P] God pack found in instance: {self.adb_port}\n"
+            + f"{'Valid' if valid else 'Invalid'}"
+        )
 
     def wonder_pick(self, tutorial_pack=False):
         self.tap_until(
@@ -793,7 +803,7 @@ class Reroll:
 
         start_time = time.time()
         elapsed_time = 0
-        self.temp_account_name= self.account_name + str(random.randint(1, 999))
+        self.temp_account_name = self.account_name + str(random.randint(1, 999))
         self.adb_input(self.temp_account_name)
 
         self.adb_tap(478, 910)

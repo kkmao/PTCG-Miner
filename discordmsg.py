@@ -23,16 +23,18 @@ class DiscordMsg:
                     else:
                         data = {"content": message}
 
-                    # Send the message
-                    response = requests.post(self.webhook_url, json=data)
-                    response.raise_for_status()
-
-                    # If an image file is provided, send it
                     if screenshot_file and os.path.isfile(screenshot_file):
                         with open(screenshot_file, "rb") as f:
                             files = {"file": f}
-                            response = requests.post(self.webhook_url, files=files)
+                            response = requests.post(
+                                self.webhook_url,
+                                json=data,
+                                files=files if files else None,
+                            )
                             response.raise_for_status()
+                    else:
+                        response = requests.post(self.webhook_url, json=data)
+                        response.raise_for_status()
 
                     # If an XML file is provided and sendXML is greater than 0, send it
                     if xml_file and send_xml > 0 and os.path.isfile(xml_file):
@@ -48,4 +50,3 @@ class DiscordMsg:
                         print("Failed to send discord message. Error: ", e)
                         break
                     time.sleep(0.25)
-                time.sleep(0.25)
