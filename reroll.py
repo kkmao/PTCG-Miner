@@ -1035,16 +1035,10 @@ class Reroll:
                     click_y=919,
                 )
                 continue
-            apply_start_time = time.time()
-            while self.screen_search(
+            if self.screen_search(
                 image_path=self.get_image_path("Apply"),
                 region=(324, 407, 379, 450),
             ):
-                if time.time() - apply_start_time > MAX_WAIT_FRIEND_TIME_SECOND / 3:
-                    LOGGER.warning(
-                        self.format_log(f"Timeout for applying friend {check_id}")
-                    )
-                    break
                 self.adb_tap(469, 422)
                 time.sleep(self.delay_ms / 500)
         self.tap_until(
