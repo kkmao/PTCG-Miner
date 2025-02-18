@@ -28,7 +28,7 @@ class DiscordMsg:
                             files = {"file": f}
                             response = requests.post(
                                 self.webhook_url,
-                                json=data,
+                                data=data,
                                 files=files if files else None,
                             )
                             response.raise_for_status()
