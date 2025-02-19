@@ -427,7 +427,6 @@ class Reroll:
 
         if pack_num > 0:
             self.current_pack += 1
-            self.total_pack += 1
             if pack_num > 3:
                 self.tap_until(
                     region=(467, 888, 499, 920),
@@ -942,8 +941,10 @@ class Reroll:
             )
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 1:
             self.open_pack(pack_num=2)
+            self.total_pack += 1
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 2:
             self.open_pack(pack_num=3)
+            self.total_pack += 1
             self.tap_until(
                 region=(186, 634, 213, 661),
                 image_name="Timer",
@@ -965,6 +966,7 @@ class Reroll:
         # 4th pack
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 3:
             self.open_pack(pack_num=4)
+            self.total_pack += 1
         else:
             self.tap_until(
                 region=(251, 906, 289, 944),
@@ -1270,3 +1272,9 @@ class Reroll:
 
     def start(self):
         self.reroll()
+
+    def status(self):
+        return {
+            "port": self.adb_port,
+            "total_pack": self.total_pack,
+        }
