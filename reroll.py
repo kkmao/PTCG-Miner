@@ -19,8 +19,8 @@ BORDER_REGIONS = [
     (36, 468, 135, 10),
     (198, 468, 135, 10),
     (362, 468, 135, 10),
-    (109, 694, 135, 10),
-    (276, 694, 135, 10),
+    (115, 694, 135, 10),
+    (281, 694, 135, 10),
 ]
 DEFAULT_DELAY_MS = 300
 DEFAULT_GAME_SPEED = 3
@@ -276,7 +276,7 @@ class Reroll:
         if self.image_search(
             image_path=self.get_image_path("Error"),
             screenshot=screenshot,
-            region=(245, 258, 295, 282),
+            region=(245, 258, 50, 24),
         ):
             LOGGER.warning(self.format_log("Error message found. Clicking retry..."))
             self.adb_tap(235, 675)
@@ -297,7 +297,7 @@ class Reroll:
             if self.image_search(
                 image_path=self.get_image_path("DateChange"),
                 screenshot=screenshot,
-                region=(235, 405, 288, 423),
+                region=(235, 405, 54, 19),
             ):
                 LOGGER.warning(
                     self.format_log("Found date change. Restarting game instance...")
@@ -404,11 +404,11 @@ class Reroll:
         if self.image_search(
             image_path=self.get_image_path("Immerse"),
             screenshot=screenshot,
-            region=(26, 445, 494, 704),
+            region=(26, 445, 468, 260),
         ) or self.image_search(
             image_path=self.get_image_path("Crown"),
             screenshot=screenshot,
-            region=(30, 465, 425, 704),
+            region=(30, 465, 395, 240),
         ):
             check_need = False
         two_star_num = 0
@@ -439,27 +439,27 @@ class Reroll:
             self.current_pack += 1
             if pack_num > 3:
                 self.tap_until(
-                    region=(467, 888, 499, 920),
+                    region=(467, 888, 32, 32),
                     image_name="Skip",
                     click_x=349,
                     click_y=791,
                 )
             else:
                 self.tap_until(
-                    region=(467, 888, 499, 920),
+                    region=(467, 888, 32, 32),
                     image_name="Skip",
                     click_x=270,
                     click_y=763,
                 )
             self.tap_until(
-                region=(405, 454, 431, 471),
+                region=(405, 454, 26, 17),
                 image_name=pack_icon_name,
                 click_x=487,
                 click_y=905,
             )
         else:
             self.tap_until(
-                region=(282, 228, 357, 253),
+                region=(282, 228, 75, 25),
                 image_name="ToSwipe",
                 click_x=268,
                 click_y=754,
@@ -472,11 +472,11 @@ class Reroll:
         swipe_times = 0
         while self.screen_search(
             image_path=self.get_image_path(pack_icon_name),
-            region=(282, 228, 357, 253),
+            region=(405, 454, 26, 17),
         ):
             if swipe_times > 1:
                 swipe_duration = min(swipe_duration + 50, MAX_SWIPE_SPEED)
-            self.adb_swipe(502, 555, 42, 555, duration=swipe_duration)
+            self.adb_swipe(42, 555, 502, 555, duration=swipe_duration)
             swipe_times += 1
         if swipe_times < 2:
             swipe_duration = max(swipe_duration - 10, DEFAULT_SWIPE_SPEED)
@@ -487,7 +487,7 @@ class Reroll:
                 self.adb_tap(200, 264)
 
             self.tap_until(
-                region=(114, 821, 146, 832),
+                region=(114, 821, 32, 11),
                 image_name="Weak",
                 click_x=268,
                 click_y=582,
@@ -499,7 +499,7 @@ class Reroll:
             start_time = time.time()
             while self.screen_search(
                 self.get_image_path("Weak"),
-                region=(114, 821, 146, 832),
+                region=(114, 821, 32, 11),
             ):
                 self.adb_swipe(277, 856, 277, 207, duration=160)
                 elapsed_time = time.time() - start_time
@@ -514,7 +514,7 @@ class Reroll:
                 self.adb_tap(326, 490)
 
             self.tap_until(
-                region=(170, 86, 220, 111),
+                region=(170, 86, 50, 25),
                 image_name="Move",
                 click_x=272,
                 click_y=606,
@@ -528,7 +528,7 @@ class Reroll:
                 self.adb_tap(326, 490)
 
             self.tap_until(
-                region=(220, 54, 320, 79),
+                region=(220, 54, 100, 25),
                 image_name="Result",
                 click_x=478,
                 click_y=905,
@@ -546,6 +546,7 @@ class Reroll:
                     ):
                         time.sleep(1)
                         pack_screenshot = self.adb_screenshot()
+                time.sleep(0.5)
                 is_god_pack, check_need, two_star_num, god_pack_screenshot_path = (
                     self.rarity_check()
                 )
@@ -563,7 +564,7 @@ class Reroll:
             self.adb_tap(268, 903)
             if pack_num == 1:
                 self.tap_until(
-                    region=(240, 51, 290, 101),
+                    region=(240, 51, 50, 50),
                     image_name="Dex",
                     click_x=522,
                     click_y=889,
@@ -571,14 +572,14 @@ class Reroll:
                     skip_time_ms=10,
                 )
                 self.tap_until(
-                    region=(207, 405, 261, 425),
+                    region=(207, 405, 54, 20),
                     image_name="Unlock",
                     click_x=272,
                     click_y=853,
                 )
             elif pack_num == 3:
                 self.tap_until(
-                    region=(240, 51, 290, 101),
+                    region=(240, 51, 50, 50),
                     image_name="Dex",
                     click_x=522,
                     click_y=889,
@@ -586,14 +587,14 @@ class Reroll:
                     skip_time_ms=10,
                 )
                 self.tap_until(
-                    region=(283, 171, 430, 222),
+                    region=(283, 171, 147, 51),
                     image_name="Hourglass",
                     click_x=272,
                     click_y=869,
                 )
             else:
                 self.tap_until(
-                    region=(240, 51, 290, 101),
+                    region=(240, 51, 50, 50),
                     image_name="Dex",
                     click_x=522,
                     click_y=889,
@@ -601,7 +602,7 @@ class Reroll:
                     skip_time_ms=10,
                 )
                 self.tap_until(
-                    region=(251, 906, 289, 944),
+                    region=(251, 906, 38, 38),
                     image_name="Home",
                     click_x=340,
                     click_y=861,
@@ -617,26 +618,26 @@ class Reroll:
 
     def wonder_pick(self, tutorial_pack=False):
         self.tap_until(
-            region=(228, 676, 270, 697),
+            region=(228, 676, 42, 21),
             image_name="WPComfirm",
             click_x=280,
             click_y=410,
         )
         self.tap_until(
-            region=(179, 122, 210, 143),
+            region=(179, 122, 31, 21),
             image_name="Choose",
             click_x=385,
             click_y=821,
         )
         self.tap_until(
-            region=(99, 72, 167, 140),
+            region=(99, 72, 68, 68),
             image_name="Get",
             click_x=270,
             click_y=350,
         )
         if tutorial_pack:
             self.tap_until(
-                region=(240, 51, 290, 101),
+                region=(240, 51, 50, 50),
                 image_name="Dex",
                 click_x=522,
                 click_y=889,
@@ -644,14 +645,14 @@ class Reroll:
                 skip_time_ms=8,
             )
             self.tap_until(
-                region=(267, 354, 326, 378),
+                region=(267, 354, 59, 24),
                 image_name="Tutorial",
                 click_x=272,
                 click_y=865,
             )
         else:
             self.tap_until(
-                region=(251, 906, 289, 944),
+                region=(251, 906, 38, 38),
                 image_name="Home",
                 click_x=522,
                 click_y=889,
@@ -665,14 +666,14 @@ class Reroll:
         while True:
             self.adb_tap(494, 75)
             if self.tap_until(
-                region=(206, 212, 334, 237),
+                region=(206, 212, 128, 25),
                 image_name="Region",
                 safe_time=elapsed_time,
                 skip_time_ms=1,
             ):
                 break
             elif self.tap_until(
-                region=(245, 71, 295, 94),
+                region=(245, 71, 50, 23),
                 image_name="Menu",
                 safe_time=elapsed_time,
                 skip_time_ms=1,
@@ -699,7 +700,7 @@ class Reroll:
             self.adb_tap(326, 490)
 
         while not self.tap_until(
-            region=(261, 494, 333, 514),
+            region=(261, 494, 72, 20),
             image_name="ConfirmBirth",
             click_x=275,
             click_y=859,
@@ -711,7 +712,7 @@ class Reroll:
             if self.image_search(
                 image_path=self.get_image_path(image_name="RegionUnselected"),
                 screenshot=open_screenshot,
-                region=(95, 361, 203, 392),
+                region=(95, 361, 108, 31),
             ):
                 self.adb_tap(278, 378)
                 self.adb_tap(274, 680)
@@ -719,14 +720,14 @@ class Reroll:
             elif self.image_search(
                 image_path=self.get_image_path(image_name="ChooseRegion"),
                 screenshot=open_screenshot,
-                region=(182, 226, 232, 251),
+                region=(182, 226, 50, 25),
             ):
                 self.adb_tap(274, 680)
                 self.adb_tap(274, 817)
 
             if not self.screen_search(
                 image_path=self.get_image_path(image_name="Selected"),
-                region=(444, 691, 468, 709),
+                region=(444, 691, 24, 18),
             ):
                 elapsed_time = time.time() - start_time
                 LOGGER.info(f"Select year. Elapsed time: {elapsed_time}s")
@@ -735,7 +736,7 @@ class Reroll:
 
             if not self.screen_search(
                 image_path=self.get_image_path(image_name="Selected"),
-                region=(211, 691, 235, 709),
+                region=(211, 691, 24, 18),
             ):
                 elapsed_time = time.time() - start_time
                 LOGGER.info(f"Select month. Elapsed time: {elapsed_time}s")
@@ -743,34 +744,34 @@ class Reroll:
                 self.adb_tap(160, 655)
 
         self.tap_until(
-            region=(179, 211, 251, 235),
+            region=(179, 211, 72, 24),
             image_name="TosScreen",
             click_x=378,
             click_y=634,
             delay_ms=1000,
         )
         self.tap_until(
-            region=(238, 832, 302, 896),
+            region=(238, 832, 64, 64),
             image_name="Close",
             click_x=254,
             click_y=500,
             delay_ms=1000,
         )
         self.tap_until(
-            region=(179, 211, 251, 235),
+            region=(179, 211, 72, 24),
             image_name="TosScreen",
             click_x=275,
             click_y=856,
         )
         self.tap_until(
-            region=(238, 832, 302, 896),
+            region=(238, 832, 64, 64),
             image_name="Close",
             click_x=255,
             click_y=576,
             delay_ms=1000,
         )
         self.tap_until(
-            region=(179, 211, 251, 235),
+            region=(179, 211, 72, 24),
             image_name="TosScreen",
             click_x=275,
             click_y=856,
@@ -783,16 +784,16 @@ class Reroll:
 
         if not self.screen_search(
             image_path=self.get_image_path("Uncomplete"),
-            region=(235, 365, 269, 383),
+            region=(235, 365, 34, 18),
         ):
             self.tap_until(
-                region=(144, 472, 216, 492),
+                region=(144, 472, 72, 20),
                 image_name="Download",
                 click_x=264,
                 click_y=826,
             )
             self.tap_until(
-                region=(252, 419, 324, 439),
+                region=(252, 419, 72, 20),
                 image_name="Complete",
                 click_x=439,
                 click_y=630,
@@ -805,7 +806,7 @@ class Reroll:
             self.adb_tap(33, 262)
 
         self.tap_until(
-            region=(77, 587, 149, 605),
+            region=(77, 587, 72, 18),
             image_name="Welcome",
             click_x=490,
             click_y=910,
@@ -816,7 +817,7 @@ class Reroll:
             self.adb_tap(326, 490)
 
         self.tap_until(
-            region=(280, 479, 352, 499), image_name="Name", click_x=338, click_y=765
+            region=(280, 479, 72, 20), image_name="Name", click_x=338, click_y=765
         )
         self.adb_tap(262, 410)
         self.adb_tap(262, 410)
@@ -829,7 +830,7 @@ class Reroll:
         self.adb_tap(478, 910)
 
         while not self.tap_until(
-            region=(280, 479, 352, 499),
+            region=(280, 479, 72, 20),
             image_name="Name",
             click_x=405,
             click_y=632,
@@ -852,7 +853,7 @@ class Reroll:
 
     def pass_tutorial(self):
         self.tap_until(
-            region=(238, 873, 302, 937),
+            region=(238, 873, 64, 64),
             image_name="Back",
             click_x=268,
             click_y=585,
@@ -861,26 +862,26 @@ class Reroll:
         # Tutorial pack
         self.open_pack(pack_num=0)
         self.tap_until(
-            region=(30, 332, 54, 356),
+            region=(30, 332, 24, 24),
             image_name="DexTask",
             click_x=483,
             click_y=826,
         )
         self.tap_until(
-            region=(252, 201, 288, 219),
+            region=(252, 201, 36, 18),
             image_name="Reward",
             click_x=47,
             click_y=406,
         )
         self.tap_until(
-            region=(363, 520, 399, 568),
+            region=(363, 520, 36, 48),
             image_name="Full",
             click_x=274,
             click_y=889,
         )
 
         self.tap_until(
-            region=(309, 641, 381, 659),
+            region=(309, 641, 72, 18),
             image_name="Notification",
             click_x=268,
             click_y=366,
@@ -892,19 +893,19 @@ class Reroll:
         self.open_pack(pack_num=1)
 
         self.tap_until(
-            region=(120, 681, 169, 710),
+            region=(120, 681, 49, 29),
             image_name="WonderIcon",
             click_x=268,
             click_y=611,
         )
         self.tap_until(
-            region=(189, 547, 261, 565),
+            region=(189, 547, 72, 18),
             image_name="Wonder",
             click_x=148,
             click_y=695,
         )
         self.tap_until(
-            region=(237, 804, 301, 868),
+            region=(237, 804, 64, 64),
             image_name="Back",
             click_x=340,
             click_y=775,
@@ -912,7 +913,7 @@ class Reroll:
         self.wonder_pick(tutorial_pack=True)
 
         self.tap_until(
-            region=(463, 816, 497, 856),
+            region=(463, 816, 34, 40),
             image_name="Task",
             click_x=347,
             click_y=793,
@@ -924,7 +925,7 @@ class Reroll:
     def open_234_pack(self):
         if self.reroll_pack.series == "A1":
             self.tap_until(
-                region=(464, 700, 492, 748),
+                region=(464, 700, 28, 48),
                 image_name="Point",
                 click_x=403,
                 click_y=320,
@@ -936,7 +937,7 @@ class Reroll:
                 self.adb_tap(422, 529)
         elif self.reroll_pack.series == "A1a":
             self.tap_until(
-                region=(250, 820, 288, 852),
+                region=(250, 820, 38, 32),
                 image_name="SmallBack",
                 click_x=184,
                 click_y=366,
@@ -944,14 +945,14 @@ class Reroll:
         elif self.reroll_pack.series == "A2":
             if self.reroll_pack == RerollPack.DIALGA:
                 self.tap_until(
-                    region=(464, 700, 492, 748),
+                    region=(464, 700, 28, 48),
                     image_name="Point",
                     click_x=268,
                     click_y=312,
                 )
             elif self.reroll_pack == RerollPack.PALKIA:
                 self.tap_until(
-                    region=(464, 700, 492, 748),
+                    region=(464, 700, 28, 48),
                     image_name="Point",
                     click_x=420,
                     click_y=312,
@@ -967,19 +968,19 @@ class Reroll:
             self.open_pack(pack_num=3)
             self.total_pack += 1
             self.tap_until(
-                region=(186, 634, 213, 661),
+                region=(194, 634, 27, 27),
                 image_name="Timer",
                 click_x=324,
                 click_y=742,
             )
             self.tap_until(
-                region=(169, 365, 222, 399),
+                region=(169, 365, 53, 34),
                 image_name="UseHourglass",
                 click_x=324,
                 click_y=735,
             )
             self.tap_until(
-                region=(186, 634, 213, 661),
+                region=(194, 634, 27, 27),
                 image_name="Timer",
                 click_x=324,
                 click_y=758,
@@ -990,7 +991,7 @@ class Reroll:
             self.total_pack += 1
         else:
             self.tap_until(
-                region=(251, 906, 289, 944),
+                region=(251, 906, 38, 38),
                 image_name="Home",
                 click_x=276,
                 click_y=889,
@@ -1004,20 +1005,20 @@ class Reroll:
         添加好友
         """
         self.tap_until(
-            region=(251, 907, 287, 943),
+            region=(251, 907, 36, 36),
             image_name="OnCommu",
             click_x=270,
             click_y=924,
         )
         self.tap_until(
-            region=(158, 136, 178, 151),
+            region=(158, 136, 20, 15),
             image_name="FriendNum",
             click_x=70,
             click_y=831,
         )
         while not self.screen_search(
             image_path=self.get_image_path("Search"),
-            region=(432, 784, 462, 814),
+            region=(432, 784, 30, 30),
         ):
             self.adb_tap(485, 143)
             self.adb_tap(251, 795)
@@ -1027,12 +1028,12 @@ class Reroll:
             if not is_start:
                 while not self.screen_search(
                     image_path=self.get_image_path("Search"),
-                    region=(432, 784, 462, 814),
+                    region=(432, 784, 30, 30),
                 ):
                     self.adb_tap(485, 143)
                 while not self.screen_search(
                     image_path=self.get_image_path("OK"),
-                    region=(481, 899, 504, 923),
+                    region=(481, 899, 23, 24),
                 ):
                     self.adb_tap(382, 795)
                 for _ in range(16):
@@ -1040,7 +1041,7 @@ class Reroll:
             is_start = False
             self.adb_input(check_id)
             self.tap_until(
-                region=(479, 304, 503, 328),
+                region=(479, 304, 24, 24),
                 image_name="FriendResult",
                 click_x=445,
                 click_y=795,
@@ -1048,11 +1049,11 @@ class Reroll:
             )
             if self.screen_search(
                 image_path=self.get_image_path("NotFound"),
-                region=(162, 389, 234, 408),
+                region=(162, 389, 72, 19),
             ):
                 self.adb_tap(271, 666)
                 self.tap_until(
-                    region=(44, 798, 88, 838),
+                    region=(44, 798, 44, 40),
                     image_name="Commu",
                     click_x=271,
                     click_y=919,
@@ -1060,12 +1061,12 @@ class Reroll:
                 continue
             if self.screen_search(
                 image_path=self.get_image_path("Apply"),
-                region=(324, 407, 379, 450),
+                region=(324, 407, 55, 43),
             ):
                 self.adb_tap(469, 422)
                 time.sleep(self.delay_ms / 500)
         self.tap_until(
-            region=(44, 798, 88, 838),
+            region=(44, 798, 44, 40),
             image_name="Commu",
             click_x=271,
             click_y=882,
@@ -1074,7 +1075,7 @@ class Reroll:
         start_time = time.time()
         while True:
             self.tap_until(
-                region=(158, 136, 178, 151),
+                region=(158, 136, 20, 15),
                 image_name="FriendNum",
                 click_x=70,
                 click_y=831,
@@ -1084,11 +1085,11 @@ class Reroll:
             if self.image_search(
                 image_path=self.get_image_path("FriendAll"),
                 screenshot=friend_screenshot,
-                region=(171, 444, 243, 464),
+                region=(171, 444, 72, 20),
             ):
                 break
             self.tap_until(
-                region=(44, 798, 88, 838),
+                region=(44, 798, 44, 40),
                 image_name="Commu",
                 click_x=271,
                 click_y=882,
@@ -1098,13 +1099,13 @@ class Reroll:
                 # back to home
                 break
         self.tap_until(
-            region=(44, 798, 88, 838),
+            region=(44, 798, 44, 40),
             image_name="Commu",
             click_x=271,
             click_y=882,
         )
         self.tap_until(
-            region=(120, 681, 169, 710),
+            region=(120, 681, 49, 29),
             image_name="WonderIcon",
             click_x=70,
             click_y=924,
@@ -1113,44 +1114,44 @@ class Reroll:
     def auto_unfriend_all(self):
         # unfriend
         self.tap_until(
-            region=(44, 798, 88, 838),
+            region=(44, 798, 44, 40),
             image_name="Commu",
             click_x=270,
             click_y=924,
         )
         while True:
             self.tap_until(
-                region=(158, 136, 178, 151),
+                region=(158, 136, 20, 15),
                 image_name="FriendNum",
                 click_x=70,
                 click_y=831,
             )
             if self.screen_search(
                 image_path=self.get_image_path("NoFriend"),
-                region=(225, 445, 297, 463),
+                region=(225, 445, 72, 18),
             ):
                 self.tap_until(
-                    region=(44, 798, 88, 838),
+                    region=(44, 798, 44, 40),
                     image_name="Commu",
                     click_x=271,
                     click_y=882,
                 )
                 break
             self.tap_until(
-                region=(164, 703, 188, 719),
+                region=(164, 703, 24, 16),
                 image_name="Friended",
                 click_x=271,
                 click_y=277,
             )
             self.adb_tap(271, 705)
             self.tap_until(
-                region=(149, 690, 204, 733),
+                region=(149, 690, 55, 43),
                 image_name="Apply",
                 click_x=438,
                 click_y=632,
             )
             self.tap_until(
-                region=(44, 798, 88, 838),
+                region=(44, 798, 44, 40),
                 image_name="Commu",
                 click_x=271,
                 click_y=882,
@@ -1163,13 +1164,13 @@ class Reroll:
         start_time = time.time()
         while (time.time() - start_time) < MAX_FRIEND_TIME_SECOND:
             self.tap_until(
-                region=(44, 798, 88, 838),
+                region=(44, 798, 44, 40),
                 image_name="Commu",
                 click_x=268,
                 click_y=884,
             )
             self.tap_until(
-                region=(158, 136, 178, 151),
+                region=(158, 136, 20, 15),
                 image_name="FriendNum",
                 click_x=70,
                 click_y=831,
@@ -1177,7 +1178,7 @@ class Reroll:
             self.adb_tap(434, 821)
             if self.screen_search(
                 image_path=self.get_image_path("ToAccept"),
-                region=(440, 291, 495, 346),
+                region=(440, 291, 55, 55),
             ):
                 self.adb_tap(467, 318)
             gp_valid = self.checker.get_valid(check_id=friend_code)
@@ -1193,13 +1194,13 @@ class Reroll:
         获取朋友ID
         """
         self.tap_until(
-            region=(251, 907, 287, 943),
+            region=(251, 907, 36, 36),
             image_name="OnCommu",
             click_x=270,
             click_y=924,
         )
         self.tap_until(
-            region=(158, 136, 178, 151),
+            region=(158, 136, 20, 15),
             image_name="FriendNum",
             click_x=70,
             click_y=831,
@@ -1222,19 +1223,19 @@ class Reroll:
         """
         if in_game:
             self.tap_until(
-                region=(190, 762, 222, 794),
+                region=(190, 762, 32, 32),
                 image_name="Setting",
                 click_x=474,
                 click_y=893,
             )
             self.tap_until(
-                region=(52, 393, 87, 431),
+                region=(52, 393, 35, 38),
                 image_name="AccountM",
                 click_x=270,
                 click_y=786,
             )
             self.tap_until(
-                region=(114, 536, 192, 557),
+                region=(114, 536, 78, 21),
                 image_name="NinAccount",
                 click_x=235,
                 click_y=415,
@@ -1242,13 +1243,13 @@ class Reroll:
         else:
             self.adb_tap(224, 435)
         self.tap_until(
-            region=(243, 492, 297, 510),
+            region=(243, 492, 54, 18),
             image_name="ComfirmDelete",
             click_x=338,
             click_y=781,
         )
         self.tap_until(
-            region=(172, 365, 297, 385),
+            region=(172, 365, 125, 20),
             image_name="Deleted",
             click_x=457,
             click_y=635,
