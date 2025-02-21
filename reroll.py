@@ -16,11 +16,11 @@ LOGGER = logging.getLogger("Reroll")
 
 SCREEN_REGION = (0, 0, 540, 960)
 BORDER_REGIONS = [
-    (36, 468, 171, 478),
-    (198, 468, 333, 478),
-    (362, 468, 497, 478),
-    # (109, 694, 244, 704),
-    # (276, 694, 411, 704),
+    (36, 468, 135, 10),
+    (198, 468, 135, 10),
+    (362, 468, 135, 10),
+    (109, 694, 135, 10),
+    (276, 694, 135, 10),
 ]
 DEFAULT_DELAY_MS = 300
 DEFAULT_GAME_SPEED = 3
@@ -382,13 +382,14 @@ class Reroll:
         check_need = False
         common_card_num = 0
         screenshot = self.adb_screenshot()
-        for region in BORDER_REGIONS:
+        for region in BORDER_REGIONS[0:3]:
             if self.image_search(
                 image_path=self.get_image_path("Common"),
                 screenshot=screenshot,
                 region=region,
             ):
                 common_card_num += 1
+                break
         is_god_pack = common_card_num == 0
         LOGGER.info(self.format_log(f"Found {common_card_num} common cards"))
         if is_god_pack:
@@ -410,9 +411,18 @@ class Reroll:
             region=(30, 465, 425, 704),
         ):
             check_need = False
+        two_star_num = 0
+        for border_region in BORDER_REGIONS:
+            if not self.image_search(
+                image_path=self.get_image_path("Onestar"),
+                screenshot=screenshot,
+                region=border_region,
+            ):
+                two_star_num += 1
         return (
             is_god_pack,
             check_need,
+            two_star_num,
             god_pack_screenshot_path if is_god_pack else None,
         )
 
@@ -527,13 +537,24 @@ class Reroll:
             time.sleep(self.delay_ms / 1000)
             is_god_pack, check_need = False, False
             if pack_num > 1:
-                is_god_pack, check_need, god_pack_screenshot_path = self.rarity_check()
+                pack_screenshot = self.adb_screenshot()
+                for border_region in BORDER_REGIONS:
+                    while self.image_search(
+                        image_path=self.get_image_path("Blank"),
+                        screenshot=pack_screenshot,
+                        region=border_region,
+                    ):
+                        time.sleep(1)
+                        pack_screenshot = self.adb_screenshot()
+                is_god_pack, check_need, two_star_num, god_pack_screenshot_path = (
+                    self.rarity_check()
+                )
             if is_god_pack:
                 self.state = RerollState.FOUNDGP
                 if self.discord_msg:
                     self.discord_msg.send_message(
                         self.get_god_pack_notification(
-                            star_num=-1, pack_num=pack_num, valid=check_need
+                            star_num=two_star_num, pack_num=pack_num, valid=check_need
                         ),
                         screenshot_file=god_pack_screenshot_path,
                         ping=check_need,
@@ -590,7 +611,7 @@ class Reroll:
         return (
             "Found god pack!!\n"
             + f"{self.temp_account_name} ()\n"
-            + f"[{star_num if star_num >= 0 else 'X'}/5][{pack_num}P] God pack found in instance: {self.adb_port}\n"
+            + f"[{star_num if star_num >= 0 else 'X'}/5][{pack_num - 1}P] God pack found in instance: {self.adb_port}\n"
             + f"{'Valid' if valid else 'Invalid'}"
         )
 
