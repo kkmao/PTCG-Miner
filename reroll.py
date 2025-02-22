@@ -1075,7 +1075,7 @@ class Reroll:
         start_time = time.time()
         while True:
             self.tap_until(
-                region=(158, 136, 20, 15),
+                region=(158, 136, 30, 15),
                 image_name="FriendNum",
                 click_x=70,
                 click_y=831,
