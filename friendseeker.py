@@ -16,18 +16,18 @@ class FriendSeeker:
         remote=False,
         local=True,
     ):
+        self.remote = remote
         if remote:
             if url and username and password:
                 self.url = url
                 self.username = username
                 self.password = password
-                self.remote = remote
             else:
                 self.remote = False
                 LOGGER.warning("No remote friend source specified")
+        self.local = local
         if local:
             if local_path:
-                self.local = local
                 self.local_path = local_path
             else:
                 self.local = False
