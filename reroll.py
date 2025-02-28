@@ -53,6 +53,7 @@ class RerollPack(Enum):
     MEW = (4, "A1a")
     DIALGA = (5, "A2")
     PALKIA = (6, "A2")
+    ARCEUS = (7, "A2a")
 
     def __init__(self, num, series):
         self.num = num
@@ -943,20 +944,21 @@ class Reroll:
                 click_y=366,
             )
         elif self.reroll_pack.series == "A2":
-            if self.reroll_pack == RerollPack.DIALGA:
-                self.tap_until(
-                    region=(464, 700, 28, 48),
-                    image_name="Point",
-                    click_x=268,
-                    click_y=312,
-                )
-            elif self.reroll_pack == RerollPack.PALKIA:
-                self.tap_until(
-                    region=(464, 700, 28, 48),
-                    image_name="Point",
-                    click_x=420,
-                    click_y=312,
-                )
+            self.tap_until(
+                region=(464, 700, 28, 48),
+                image_name="Point",
+                click_x=420,
+                click_y=312,
+            )
+            if self.reroll_pack == RerollPack.PALKIA:
+                self.adb_tap(422, 529)
+        elif self.reroll_pack.series == "A2a":
+            self.tap_until(
+                region=(464, 700, 28, 48),
+                image_name="Point",
+                click_x=268,
+                click_y=312,
+            )
         else:
             LOGGER.error(
                 self.format_log(f"Invalid pack series: {self.reroll_pack.series}")
