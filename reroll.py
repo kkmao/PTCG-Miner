@@ -40,6 +40,7 @@ class RerollState(Enum):
     RESET = auto()
     RESTART = auto()
     FOUNDGP = auto()
+    FOUNDINVALID = auto()
     FINISHED_TUTORIAL = auto()
     AUTOFRIEND = auto()
     COMPLETED = auto()
@@ -392,9 +393,10 @@ class Reroll:
                 common_card_num += 1
                 break
         is_god_pack = common_card_num == 0
+        check_need = True
+        two_star_num = 0
         LOGGER.info(self.format_log(f"Found {common_card_num} common cards"))
         if is_god_pack:
-            check_need = True
             # save screenshot
             god_pack_screenshot_path = os.path.join(
                 os.curdir,
@@ -402,24 +404,23 @@ class Reroll:
                 f"god_pack_{self.adb_port}_{int(time.time())}.png",
             )
             screenshot.save(god_pack_screenshot_path)
-        if self.image_search(
-            image_path=self.get_image_path("Immerse"),
-            screenshot=screenshot,
-            region=(26, 445, 468, 260),
-        ) or self.image_search(
-            image_path=self.get_image_path("Crown"),
-            screenshot=screenshot,
-            region=(30, 465, 395, 240),
-        ):
-            check_need = False
-        two_star_num = 0
-        for border_region in BORDER_REGIONS:
-            if not self.image_search(
-                image_path=self.get_image_path("Onestar"),
+            if self.image_search(
+                image_path=self.get_image_path("Immerse"),
                 screenshot=screenshot,
-                region=border_region,
+                region=(26, 445, 468, 260),
+            ) or self.image_search(
+                image_path=self.get_image_path("Crown"),
+                screenshot=screenshot,
+                region=(30, 465, 395, 240),
             ):
-                two_star_num += 1
+                check_need = False
+            for border_region in BORDER_REGIONS:
+                if not self.image_search(
+                    image_path=self.get_image_path("Onestar"),
+                    screenshot=screenshot,
+                    region=border_region,
+                ):
+                    two_star_num += 1
         return (
             is_god_pack,
             check_need,
@@ -552,7 +553,10 @@ class Reroll:
                     self.rarity_check()
                 )
             if is_god_pack:
-                self.state = RerollState.FOUNDGP
+                if check_need:
+                    self.state = RerollState.FOUNDGP
+                elif self.state != RerollState.FOUNDGP:
+                    self.state = RerollState.FOUNDINVALID
                 if self.discord_msg:
                     self.discord_msg.send_message(
                         self.get_god_pack_notification(
@@ -561,7 +565,6 @@ class Reroll:
                         screenshot_file=god_pack_screenshot_path,
                         ping=check_need,
                     )
-                return
             self.adb_tap(268, 903)
             if pack_num == 1:
                 self.tap_until(
@@ -592,6 +595,24 @@ class Reroll:
                     image_name="Hourglass",
                     click_x=272,
                     click_y=869,
+                )
+                self.tap_until(
+                    region=(194, 634, 27, 27),
+                    image_name="Timer",
+                    click_x=324,
+                    click_y=742,
+                )
+                self.tap_until(
+                    region=(169, 365, 53, 34),
+                    image_name="UseHourglass",
+                    click_x=324,
+                    click_y=735,
+                )
+                self.tap_until(
+                    region=(194, 634, 27, 27),
+                    image_name="Timer",
+                    click_x=324,
+                    click_y=758,
                 )
             else:
                 self.tap_until(
@@ -969,38 +990,47 @@ class Reroll:
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 2:
             self.open_pack(pack_num=3)
             self.total_pack += 1
-            self.tap_until(
-                region=(194, 634, 27, 27),
-                image_name="Timer",
-                click_x=324,
-                click_y=742,
-            )
-            self.tap_until(
-                region=(169, 365, 53, 34),
-                image_name="UseHourglass",
-                click_x=324,
-                click_y=735,
-            )
-            self.tap_until(
-                region=(194, 634, 27, 27),
-                image_name="Timer",
-                click_x=324,
-                click_y=758,
-            )
         # 4th pack
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 3:
             self.open_pack(pack_num=4)
             self.total_pack += 1
-        else:
+
+        if self.state == RerollState.FOUNDGP or self.state == RerollState.FOUNDINVALID:
             self.tap_until(
                 region=(251, 906, 38, 38),
                 image_name="Home",
                 click_x=276,
                 click_y=889,
             )
-
-        if self.state != RerollState.FOUNDGP:
+        else:
             self.state = RerollState.COMPLETED
+
+    def change_tag(self):
+        self.tap_until(
+            region=(120, 681, 49, 29),
+            image_name="WonderIcon",
+            click_x=276,
+            click_y=832,
+        )
+        self.tap_until(
+            region=(412, 456, 27, 27),
+            image_name="Profile",
+            click_x=269,
+            click_y=93,
+        )
+        self.tap_until(
+            region=(436, 488, 19, 13),
+            image_name="Checked",
+            click_x=267,
+            click_y=521,
+            delay_ms=500,
+        )
+        self.tap_until(
+            region=(234, 601, 72, 19),
+            image_name="Badge",
+            click_x=268,
+            click_y=821,
+        )
 
     def add_friends(self):
         """
@@ -1280,6 +1310,10 @@ class Reroll:
                     # backup account
                     self.delete_account()
                 elif self.state == RerollState.FOUNDGP:
+                    self.change_tag()
+                    self.backup_account()
+                elif self.state == RerollState.FOUNDINVALID:
+                    self.auto_unfriend_all()
                     self.backup_account()
                 elif self.state == RerollState.BREAKDOWN:
                     LOGGER.error(self.format_log("Breakdown"))
