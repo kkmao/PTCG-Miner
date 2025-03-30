@@ -55,6 +55,7 @@ class RerollPack(Enum):
     DIALGA = (5, "A2")
     PALKIA = (6, "A2")
     ARCEUS = (7, "A2a")
+    Shining = (8, "A2b")
 
     def __init__(self, num, series):
         self.num = num
