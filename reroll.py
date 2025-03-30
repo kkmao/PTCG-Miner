@@ -1267,7 +1267,7 @@ class Reroll:
                 click_y=786,
             )
             self.tap_until(
-                region=(114, 536, 78, 21),
+                region=(114, 781, 78, 21),
                 image_name="NinAccount",
                 click_x=235,
                 click_y=415,
@@ -1275,10 +1275,16 @@ class Reroll:
         else:
             self.adb_tap(224, 435)
         self.tap_until(
-            region=(243, 492, 54, 18),
+            region=(239, 149, 60, 60),
+            image_name="WarrningDelete",
+            click_x=467,
+            click_y=905,
+        )
+        self.tap_until(
+            region=(207, 505, 54, 18),
             image_name="ComfirmDelete",
-            click_x=338,
-            click_y=781,
+            click_x=387,
+            click_y=865,
         )
         self.tap_until(
             region=(172, 365, 125, 20),
