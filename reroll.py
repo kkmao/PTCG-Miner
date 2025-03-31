@@ -413,6 +413,10 @@ class Reroll:
                 image_path=self.get_image_path("Crown"),
                 screenshot=screenshot,
                 region=(30, 465, 395, 240),
+            ) or self.image_search(
+                image_path=self.get_image_path("Shining"),
+                screenshot=screenshot,
+                region=(30, 465, 395, 240),
             ):
                 check_need = False
             for border_region in BORDER_REGIONS:
