@@ -982,6 +982,13 @@ class Reroll:
             self.tap_until(
                 region=(464, 700, 28, 48),
                 image_name="Point",
+                click_x=420,
+                click_y=312,
+            )
+        elif self.reroll_pack.series == "A2b":
+            self.tap_until(
+                region=(464, 700, 28, 48),
+                image_name="Point",
                 click_x=268,
                 click_y=312,
             )
