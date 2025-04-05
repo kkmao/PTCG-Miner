@@ -397,8 +397,10 @@ class Reroll:
             ):
                 common_card_num += 1
                 break
-
-        if self.check_double_twostar:
+        is_god_pack = common_card_num == 0
+        check_need = True
+        
+        if not is_god_pack and self.check_double_twostar:
             for region in BORDER_REGIONS[3:5]:
                 if self.image_search(
                     image_path=self.get_image_path("RainbowFrame"),
@@ -414,10 +416,8 @@ class Reroll:
                     region=region,
                 ):
                     twostar_card_num += 1
-        
-        is_god_pack = common_card_num == 0
         is_double_twostar_pack = twostar_card_num == 2
-        check_need = True
+        
         two_star_num = 0
         LOGGER.info(self.format_log(f"Found {common_card_num} common cards"))
         if is_god_pack:
@@ -587,13 +587,16 @@ class Reroll:
                 elif self.state != RerollState.FOUNDGP:
                     self.state = RerollState.FOUNDINVALID
                 if self.discord_msg:
+                    if is_god_pack:
+                        message = self.get_god_pack_notification(star_num=two_star_num, pack_num=pack_num, valid=check_need)
+                    else:
+                        message = self.get_double_twostar_pack_notification(pack_num=pack_num, valid=check_need)
                     self.discord_msg.send_message(
-                        self.get_god_pack_notification(
-                            star_num=two_star_num, pack_num=pack_num, valid=check_need
-                        ),
+                        message,
                         screenshot_file=god_pack_screenshot_path,
                         ping=check_need,
                     )
+            
             self.adb_tap(268, 903)
             if pack_num == 1:
                 self.tap_until(
@@ -660,20 +663,19 @@ class Reroll:
                 )
 
     def get_god_pack_notification(self, star_num: int, pack_num: int, valid: bool):
-        notification = ""
-        if not self.check_double_twostar:
-            notification = "Found god pack!!\n"
+        return (
+            "Found god pack!!\n"
             + f"{self.temp_account_name} ()\n"
             + f"[{star_num if star_num >= 0 else 'X'}/5][{pack_num - 1}P] God pack found in instance: {self.adb_port}\n"
             + f"{'Valid' if valid else 'Invalid'}"
-        else:
-            notification = "Double two star found\n"
+        )
+    
+    def get_double_twostar_pack_notification(self, pack_num: int, valid: bool):
+        return (
+            "Double two star found\n"
             + f"{self.temp_account_name} ()\n"
             + f"[2x2][{pack_num - 1}P] Double two pack found in instance: {self.adb_port}\n"
             + f"{'Valid' if valid else 'Invalid'}"
-            
-        return (
-            notification
         )
 
     def wonder_pick(self, tutorial_pack=False):
