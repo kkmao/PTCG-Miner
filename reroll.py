@@ -401,7 +401,7 @@ class Reroll:
         check_need = True
         
         if not is_god_pack and self.check_double_twostar:
-            for region in BORDER_REGIONS[3:5]:
+            for region in BORDER_REGIONS:
                 if self.image_search(
                     image_path=self.get_image_path("RainbowFrame"),
                     screenshot=screenshot,
