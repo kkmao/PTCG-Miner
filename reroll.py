@@ -33,6 +33,7 @@ MAX_FRIEND_TIME_SECOND = 15 * 60
 MAX_WAIT_FRIEND_TIME_SECOND = 15
 DEFAULT_MAX_PACKS_TO_OPEN = 4
 DEFAULT_CHECK_DOUBLE_TWOSTAR = False
+DEFAULT_SNEAK_PEEK_EVENT = False
 
 
 class RerollState(Enum):
@@ -92,6 +93,7 @@ class Reroll:
         account_name="SlvGP",
         max_packs_to_open=DEFAULT_MAX_PACKS_TO_OPEN,
         check_double_twostar=DEFAULT_CHECK_DOUBLE_TWOSTAR,
+        sneak_peek_event=DEFAULT_SNEAK_PEEK_EVENT,
     ):
         if isinstance(reroll_pack, RerollPack):
             self.reroll_pack = reroll_pack
@@ -120,6 +122,7 @@ class Reroll:
         self.adb_port = adb_device.get_serialno().split(":")[-1]
         self.discord_msg = discord_msg
         self.check_double_twostar = check_double_twostar
+        self.sneak_peek_event = sneak_peek_event
 
     def format_log(self, message):
         return f"[127.0.0.1:{self.adb_port}] {message}"
@@ -389,34 +392,31 @@ class Reroll:
         common_card_num = 0
         twostar_card_num = 0
         screenshot = self.adb_screenshot()
-        for region in BORDER_REGIONS[0:3]:
+        for region in BORDER_REGIONS:
             if self.image_search(
                 image_path=self.get_image_path("Common"),
                 screenshot=screenshot,
                 region=region,
             ):
                 common_card_num += 1
-                break
-        is_god_pack = common_card_num == 0
-        check_need = True
-        
-        if not is_god_pack and self.check_double_twostar:
-            for region in BORDER_REGIONS:
+            if self.check_double_twostar:
                 if self.image_search(
-                    image_path=self.get_image_path("RainbowFrame"),
+                    image_path=self.get_image_path("RainbowBorder"),
                     screenshot=screenshot,
                     region=region,
                 ) or self.image_search(
-                    image_path=self.get_image_path("BlackFrame"),
+                    image_path=self.get_image_path("FullArtBorder"),
                     screenshot=screenshot,
                     region=region,
                 ) or self.image_search(
-                    image_path=self.get_image_path("WhiteFrame"),
+                    image_path=self.get_image_path("TrianerBorder"),
                     screenshot=screenshot,
                     region=region,
                 ):
                     twostar_card_num += 1
-        is_double_twostar_pack = twostar_card_num == 2
+        is_god_pack = common_card_num == 0
+        is_double_twostar_pack = twostar_card_num == 2 and not is_god_pack
+        check_need = True
         
         two_star_num = 0
         LOGGER.info(self.format_log(f"Found {common_card_num} common cards"))
@@ -437,7 +437,7 @@ class Reroll:
                 screenshot=screenshot,
                 region=(30, 465, 395, 240),
             ) or self.image_search(
-                image_path=self.get_image_path("Shining"),
+                image_path=self.get_image_path("ShinyBorder"),
                 screenshot=screenshot,
                 region=(30, 465, 395, 240),
             ):
@@ -449,12 +449,22 @@ class Reroll:
                     region=border_region,
                 ):
                     two_star_num += 1
+        
+        if is_double_twostar_pack:
+            double_twostar_pack_screenshot_path = os.path.join(
+                os.curdir,
+                "screenshot",
+                f"double_twostar_pack_{self.adb_port}_{int(time.time())}.png",
+            )
+            screenshot.save(double_twostar_pack_screenshot_path)
+
         return (
             is_god_pack,
             is_double_twostar_pack,
             check_need,
             two_star_num,
             god_pack_screenshot_path if is_god_pack else None,
+            double_twostar_pack_screenshot_path if is_double_twostar_pack else None,
         )
 
     def open_pack(self, pack_num=2):
@@ -468,7 +478,20 @@ class Reroll:
 
         if pack_num > 0:
             self.current_pack += 1
-            if pack_num > 3:
+            if pack_num > 3 and pack_num < 5:
+                self.tap_until(
+                    region=(467, 888, 32, 32),
+                    image_name="Skip",
+                    click_x=349,
+                    click_y=791,
+                )
+            elif pack_num > 4:
+                self.tap_until(
+                    region=(133, 797, 168, 836),
+                    image_name="PackHourglass",
+                    click_x=395,
+                    click_y=747,
+                )
                 self.tap_until(
                     region=(467, 888, 32, 32),
                     image_name="Skip",
@@ -578,7 +601,7 @@ class Reroll:
                         time.sleep(1)
                         pack_screenshot = self.adb_screenshot()
                 time.sleep(0.5)
-                is_god_pack, is_double_twostar_pack, check_need, two_star_num, god_pack_screenshot_path = (
+                is_god_pack, is_double_twostar_pack, check_need, two_star_num, god_pack_screenshot_path, double_twostar_pack_screenshot_path = (
                     self.rarity_check()
                 )
             if is_god_pack or is_double_twostar_pack:
@@ -589,11 +612,13 @@ class Reroll:
                 if self.discord_msg:
                     if is_god_pack:
                         message = self.get_god_pack_notification(star_num=two_star_num, pack_num=pack_num, valid=check_need)
-                    else:
+                        screenshot_path = god_pack_screenshot_path
+                    elif is_double_twostar_pack:
                         message = self.get_double_twostar_pack_notification(pack_num=pack_num, valid=check_need)
+                        screenshot_path = double_twostar_pack_screenshot_path
                     self.discord_msg.send_message(
                         message,
-                        screenshot_file=god_pack_screenshot_path,
+                        screenshot_file=screenshot_path,
                         ping=check_need,
                     )
             
@@ -842,8 +867,12 @@ class Reroll:
         self.adb_tap(80, 642)
         self.adb_tap(84, 705)
         self.adb_tap(275, 859)
-        self.adb_tap(263, 592)
-
+        self.tap_until(
+            region=(112, 585, 190, 606),
+            image_name="NinAccount",
+            click_x=263,
+            click_y=592,
+        )
         if not self.screen_search(
             image_path=self.get_image_path("Uncomplete"),
             region=(235, 365, 34, 18),
@@ -1037,9 +1066,16 @@ class Reroll:
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 2:
             self.open_pack(pack_num=3)
             self.total_pack += 1
-        # 4th pack
+        # 4th pack, first hourglass pack
         if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 3:
             self.open_pack(pack_num=4)
+            self.total_pack += 1
+        if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 3:
+            self.open_pack(pack_num=5)
+            self.total_pack += 1
+        # 6th pack
+        if self.state != RerollState.FOUNDGP and self.max_packs_to_open > 3:
+            self.open_pack(pack_num=6)
             self.total_pack += 1
 
         if self.state == RerollState.FOUNDGP or self.state == RerollState.FOUNDINVALID:
@@ -1342,6 +1378,95 @@ class Reroll:
         self.adb_tap(277, 635)
         self.reset()
 
+    def do_extra_wonder_pick(self):
+        self.tap_until(
+            region=(228, 676, 270, 697),
+            image_name="WPComfirm",
+            click_x=240,
+            click_y=635,
+        )
+        self.tap_until(
+            region=(63, 320, 134, 389),
+            image_name="WPCardBack",
+            click_x=385,
+            click_y=821,
+        )
+        time.sleep(2) #wait for sneak peek event showup
+        if self.screen_search(
+            image_path=self.get_image_path(image_name="SneakOne"),
+            region=(213, 101, 244, 127),
+        ):
+            self.tap_until(
+                region=(226, 319, 310, 395),
+                image_name="SneakTool",
+                click_x=270,
+                click_y=350,
+            )
+            self.tap_until(
+                region=(179, 122, 31, 21),
+                image_name="Choose",
+                click_x=275,
+                click_y=861,
+            )
+            
+        self.tap_until(
+            region=(99, 72, 68, 68),
+            image_name="Get",
+            click_x=270,
+            click_y=350,
+        )
+        self.tap_until(
+            region=(240, 51, 50, 50),
+            image_name="Dex",
+            click_x=522,
+            click_y=889,
+            delay_ms=110,
+            skip_time_ms=8,
+        )
+        self.tap_until(
+            region=(217, 33, 323, 72),
+            image_name="WonderPick",
+            click_x=279,
+            click_y=880,
+        )
+        self.tap_until(
+            region=(120, 681, 49, 29),
+            image_name="WonderIcon",
+            click_x=271,
+            click_y=837,
+        )
+        #get two hourglass from mission
+        self.tap_until(
+            region=(181, 416, 324, 443),
+            image_name="WPReward",
+            click_x=483,
+            click_y=837,
+        )
+        self.tap_until(
+            region=(231, 715, 302, 747),
+            image_name="Accomplish",
+            click_x=280,
+            click_y=493,
+        )
+        self.tap_until(
+            region=(168, 417, 248, 515),
+            image_name="MissionCompleteHourglass",
+            click_x=267,
+            click_y=731,
+        )
+        self.tap_until(
+            region=(237, 873, 301, 937),
+            image_name="Close",
+            click_x=268,
+            click_y=621,
+        )
+        self.tap_until(
+            region=(120, 681, 169, 710),
+            image_name="WonderIcon",
+            click_x=273,
+            click_y=905,
+        )
+
     def reroll(self):
         while True:
             try:
@@ -1353,6 +1478,7 @@ class Reroll:
                 elif self.state == RerollState.REGISTERED:
                     self.pass_tutorial()
                 elif self.state == RerollState.FINISHED_TUTORIAL:
+                    self.do_extra_wonder_pick()
                     self.add_friends()
                     if self.max_packs_to_open > 1:
                         self.open_234_pack()
